@@ -1,0 +1,392 @@
+databaseChangeLog:
+- changeSet:
+    id: 1789412790437-1
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: app_auth
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: administradorPK
+            name: usuario_id
+            type: BIGINT
+        tableName: administrador
+- changeSet:
+    id: 1789412790437-2
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: perfil
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: alunoPK
+            name: usuario_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: criado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: curso
+            type: VARCHAR(150)
+        - column:
+            name: habilidades
+            type: VARCHAR(255)
+        - column:
+            name: interesses
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: matricula
+            type: VARCHAR(30)
+        - column:
+            name: periodo
+            type: SMALLINT
+        - column:
+            name: resumo
+            type: VARCHAR(255)
+        - column:
+            name: telefone
+            type: VARCHAR(30)
+        - column:
+            constraints:
+              nullable: false
+            name: atualizado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        tableName: aluno
+- changeSet:
+    id: 1789412790437-3
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: oportunidades
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: candidaturaPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: data_candidatura
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            name: pontuacao_compatibilidade
+            type: numeric(5, 2)
+        - column:
+            constraints:
+              nullable: false
+            name: criado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: oportunidades.status_candidatura
+        - column:
+            constraints:
+              nullable: false
+            name: atualizado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: oportunidade_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: aluno_id
+            type: BIGINT
+        tableName: candidatura
+- changeSet:
+    id: 1789412790437-4
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: perfil
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: experiencia_profissionalPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: atual
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: cargo
+            type: VARCHAR(150)
+        - column:
+            constraints:
+              nullable: false
+            name: criado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            name: descricao
+            type: VARCHAR(255)
+        - column:
+            name: data_fim
+            type: date
+        - column:
+            constraints:
+              nullable: false
+            name: organizacao
+            type: VARCHAR(200)
+        - column:
+            constraints:
+              nullable: false
+            name: data_inicio
+            type: date
+        - column:
+            constraints:
+              nullable: false
+            name: atualizado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: aluno_id
+            type: BIGINT
+        tableName: experiencia_profissional
+- changeSet:
+    id: 1789412790437-5
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: oportunidades
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: notificacaoPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: criado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: lida
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: mensagem
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: data_envio
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: titulo
+            type: VARCHAR(200)
+        - column:
+            constraints:
+              nullable: false
+            name: atualizado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: usuario_id
+            type: BIGINT
+        tableName: notificacao
+- changeSet:
+    id: 1789412790437-6
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: oportunidades
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: oportunidadePK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: criado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: descricao
+            type: VARCHAR(255)
+        - column:
+            name: localizacao
+            type: VARCHAR(200)
+        - column:
+            constraints:
+              nullable: false
+            name: modalidade
+            type: oportunidades.modalidade_oportunidade
+        - column:
+            constraints:
+              nullable: false
+            name: fim_inscricoes
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: inicio_inscricoes
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            name: requisitos
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: oportunidades.status_oportunidade
+        - column:
+            constraints:
+              nullable: false
+            name: titulo
+            type: VARCHAR(200)
+        - column:
+            constraints:
+              nullable: false
+            name: atualizado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: quantidade_vagas
+            type: INTEGER
+        - column:
+            name: avaliador_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: recrutador_id
+            type: BIGINT
+        tableName: oportunidade
+- changeSet:
+    id: 1789412790437-7
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: perfil
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: recrutadorPK
+            name: usuario_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: autorizado
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: criado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: nome_organizacao
+            type: VARCHAR(200)
+        - column:
+            constraints:
+              nullable: false
+            name: tipo
+            type: perfil.tipo_recrutador
+        - column:
+            constraints:
+              nullable: false
+            name: atualizado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        tableName: recrutador
+- changeSet:
+    id: 1789412790437-8
+    author: Davi Vinhas (generated)
+    validCheckSum: ANY
+    changes:
+    - createTable:
+        schemaName: app_auth
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: usuarioPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: active
+            type: BOOLEAN
+        - column:
+            constraints:
+              nullable: false
+            name: criado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: email
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(150)
+        - column:
+            constraints:
+              nullable: false
+            name: senha_hash
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: atualizado_em
+            type: TIMESTAMP(6) WITH TIME ZONE
+        tableName: usuario
