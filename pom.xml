@@ -170,7 +170,6 @@
                     <referenceDriver>liquibase.ext.hibernate.database.connection.HibernateDriver</referenceDriver>
                     <referenceUrl>hibernate:spring:com.example.portal_oportunidades_back?dialect=org.hibernate.dialect.PostgreSQLDialect</referenceUrl>
                     <includeArtifact>true</includeArtifact>
-                    <cleanDisabled>true</cleanDisabled>
                 </configuration>
                 <dependencies>
                     <dependency>
