@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260916-opportunity-crud
+      author: linkedufma
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE oportunidades.oportunidade ALTER COLUMN descricao TYPE TEXT;
+              ALTER TABLE oportunidades.oportunidade ALTER COLUMN requisitos TYPE TEXT;
+              ALTER TABLE oportunidades.oportunidade ADD COLUMN deleted_at TIMESTAMPTZ;
+              CREATE INDEX idx_opportunity_active_cursor ON oportunidades.oportunidade (criado_em DESC, id DESC) WHERE deleted_at IS NULL;

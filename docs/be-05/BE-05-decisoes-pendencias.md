@@ -15,6 +15,8 @@
 - MapStruct e annotation processor configurados no Maven.
 - Maven Wrapper marcado como executável no Linux.
 - Profile `test` desabilita banco, Liquibase, Redis e Docker Compose no teste de contexto.
+- Profile `integration-test` usa PostgreSQL 17 descartável e executa todos os changesets.
+- Profile `cloud` impede migrations automáticas no banco compartilhado.
 - Extensões recomendadas do VS Code registradas em `.vscode/extensions.json`.
 - Respostas de erro uniformes para validação, recurso inexistente, propriedade e regra de negócio.
 
@@ -22,11 +24,9 @@
 
 1. Integrar os endpoints com o principal autenticado e substituir as rotas temporárias por `/me`.
 2. Reconciliar o tratamento global de erros com a tarefa transversal BE-00.2.
-3. Criar ou receber os changesets Liquibase iniciais antes de validar o mapeamento JPA.
-4. Confirmar os valores dos enums PostgreSQL com os novos valores em inglês.
-5. Executar testes de integração com PostgreSQL e Liquibase.
-6. Definir o fluxo administrativo para `PENDING_APPROVAL` e `REJECTED`.
-7. Integrar o bloqueio de candidatura com `canReceiveApplications`.
+3. Revisar e aplicar explicitamente no Supabase os changesets validados no container.
+4. Definir o fluxo administrativo para `PENDING_APPROVAL` e `REJECTED`.
+5. Integrar o bloqueio de candidatura com `canReceiveApplications`.
 
 ## Compatibilidade de banco
 

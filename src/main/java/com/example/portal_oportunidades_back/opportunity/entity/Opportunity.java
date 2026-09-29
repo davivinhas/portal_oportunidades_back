@@ -26,9 +26,9 @@ public class Opportunity {
     private Administrator evaluator;
     @Column(name = "titulo", nullable = false, length = 200)
     private String title;
-    @Column(name = "descricao", nullable = false)
+    @Column(name = "descricao", nullable = false, columnDefinition = "text")
     private String description;
-    @Column(name = "requisitos")
+    @Column(name = "requisitos", columnDefinition = "text")
     private String requirements;
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

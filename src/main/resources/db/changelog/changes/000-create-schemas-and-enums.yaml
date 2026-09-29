@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 000-create-schemas-and-enums
+      author: portal-oportunidades
+      validCheckSum: ANY
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE SCHEMA IF NOT EXISTS app_auth;
+              CREATE SCHEMA IF NOT EXISTS perfil;
+              CREATE SCHEMA IF NOT EXISTS oportunidades;
+
+              DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname='oportunidades' AND t.typname='status_candidatura') THEN
+                  CREATE TYPE oportunidades.status_candidatura AS ENUM ('SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'REJECTED');
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname='oportunidades' AND t.typname='modalidade_oportunidade') THEN
+                  CREATE TYPE oportunidades.modalidade_oportunidade AS ENUM ('ESTAGIO', 'IC', 'IT', 'EXTENSAO', 'BOLSA', 'OUTRA');
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname='oportunidades' AND t.typname='status_oportunidade') THEN
+                  CREATE TYPE oportunidades.status_oportunidade AS ENUM ('RASCUNHO', 'PENDENTE_APROVACAO', 'PUBLICADA', 'REJEITADA', 'ENCERRADA');
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname='perfil' AND t.typname='tipo_recrutador') THEN
+                  CREATE TYPE perfil.tipo_recrutador AS ENUM ('EMPRESA', 'PROFESSOR', 'LIGA_ACADEMICA', 'SETOR_UNIVERSIDADE', 'OUTRO');
+                END IF;
+              END $$;
