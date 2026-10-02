@@ -2,3 +2,4 @@ databaseChangeLog:
   - includeAll:
       path: changes
       relativeToChangelogFile: true
+      errorIfMissingOrEmpty: false
