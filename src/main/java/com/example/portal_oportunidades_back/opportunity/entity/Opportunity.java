@@ -4,9 +4,7 @@ import com.example.portal_oportunidades_back.auth.entity.Administrator;
 import com.example.portal_oportunidades_back.exception.BusinessException;
 import com.example.portal_oportunidades_back.profile.entity.Recruiter;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -28,11 +26,12 @@ public class Opportunity {
     @JoinColumn(name = "avaliador_id")
     private Administrator evaluator;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "titulo", nullable = false, length = 200)
     private String title;
 
-    @Column(nullable = false)
+    @Column(name = "descricao", nullable = false, columnDefinition = "text")
     private String description;
+    @Column(name = "requisitos", columnDefinition = "text")
     private String requirements;
 
     @Enumerated(EnumType.STRING)
@@ -40,7 +39,7 @@ public class Opportunity {
     @Column(nullable = false, columnDefinition = "oportunidades.modalidade_oportunidade")
     private OpportunityModality modality;
 
-    @Column(length = 200)
+    @Column(name = "localizacao", length = 200)
     private String location;
 
     @Column(name = "quantidade_vagas", nullable = false)
@@ -57,16 +56,18 @@ public class Opportunity {
     @Column(nullable = false, columnDefinition = "oportunidades.status_oportunidade")
     private OpportunityStatus status;
 
-    @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @UpdateTimestamp
     @Column(name = "atualizado_em", nullable = false)
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     protected Opportunity() {
     }
@@ -77,8 +78,8 @@ public class Opportunity {
         opportunity.recruiter = Objects.requireNonNull(recruiter, "Recruiter is required");
         opportunity.applyDetails(Objects.requireNonNull(details, "details is required"));
         opportunity.status = OpportunityStatus.RASCUNHO;
-        opportunity.createdAt = now;
-        opportunity.updatedAt = now;
+        opportunity.createdAt = timestamp(now);
+        opportunity.updatedAt = opportunity.createdAt;
         return opportunity;
     }
 
@@ -112,6 +113,12 @@ public class Opportunity {
         }
         status = OpportunityStatus.ENCERRADA;
         updatedAt = timestamp(now);
+    }
+
+    public void softDelete(Instant now) {
+        requireNotDeleted();
+        deletedAt = timestamp(now);
+        updatedAt = deletedAt;
     }
 
     public boolean canReceiveApplications(Instant now) {

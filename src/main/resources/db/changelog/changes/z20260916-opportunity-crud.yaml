@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260916-opportunity-crud
+      author: linkedufma
+      changes:
+        - addColumn:
+            schemaName: oportunidades
+            tableName: oportunidade
+            columns:
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP(6) WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: oportunidades
+            tableName: oportunidade
+            columnName: descricao
+            newDataType: TEXT
+
+        - modifyDataType:
+            schemaName: oportunidades
+            tableName: oportunidade
+            columnName: requisitos
+            newDataType: TEXT
+
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE INDEX idx_opportunity_active_cursor
+              ON oportunidades.oportunidade (criado_em DESC, id DESC)
+              WHERE deleted_at IS NULL;
