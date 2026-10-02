@@ -14,6 +14,6 @@ public record OpportunitySummaryResponse(
         Instant registrationEndsAt,
         OpportunityStatus status,
         Instant createdAt,
-        RecruiterSummaryResponse recruiter
+        Long recruiterId
 ) {
 }

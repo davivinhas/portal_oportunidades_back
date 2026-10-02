@@ -1,15 +1,26 @@
 package com.example.portal_oportunidades_back.opportunity.entity;
 
-import com.example.portal_oportunidades_back.auth.entity.Administrator;
 import com.example.portal_oportunidades_back.exception.BusinessException;
 import com.example.portal_oportunidades_back.profile.entity.Recruiter;
-import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(schema = "oportunidades", name = "oportunidade")
@@ -22,21 +33,18 @@ public class Opportunity {
     @JoinColumn(name = "recrutador_id", nullable = false)
     private Recruiter recruiter;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "avaliador_id")
-    private Administrator evaluator;
-
     @Column(name = "titulo", nullable = false, length = 200)
     private String title;
 
     @Column(name = "descricao", nullable = false, columnDefinition = "text")
     private String description;
+
     @Column(name = "requisitos", columnDefinition = "text")
     private String requirements;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "oportunidades.modalidade_oportunidade")
+    @Column(name = "modalidade", nullable = false, columnDefinition = "oportunidades.modalidade_oportunidade")
     private OpportunityModality modality;
 
     @Column(name = "localizacao", length = 200)
@@ -53,12 +61,14 @@ public class Opportunity {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false, columnDefinition = "oportunidades.status_oportunidade")
+    @Column(name = "status", nullable = false, columnDefinition = "oportunidades.status_oportunidade")
     private OpportunityStatus status;
 
+    @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @UpdateTimestamp
     @Column(name = "atualizado_em", nullable = false)
     private Instant updatedAt;
 
@@ -69,49 +79,44 @@ public class Opportunity {
     @Column(nullable = false)
     private long version;
 
-    protected Opportunity() {
+    protected Opportunity() { }
+
+    public Opportunity(Recruiter recruiter, OpportunityDetails details) {
+        this.recruiter = Objects.requireNonNull(recruiter, "recruiter must not be null");
+        apply(details);
+        this.status = OpportunityStatus.DRAFT;
     }
 
-    // Regras de negocio
-    public static Opportunity create(Recruiter recruiter, OpportunityDetails details, Instant now) {
-        Opportunity opportunity = new Opportunity();
-        opportunity.recruiter = Objects.requireNonNull(recruiter, "Recruiter is required");
-        opportunity.applyDetails(Objects.requireNonNull(details, "details is required"));
-        opportunity.status = OpportunityStatus.RASCUNHO;
-        opportunity.createdAt = timestamp(now);
-        opportunity.updatedAt = opportunity.createdAt;
-        return opportunity;
-    }
-
-    public void updateDetails(OpportunityDetails details, Instant now) {
+    public void updateDetails(OpportunityDetails details) {
         requireNotDeleted();
-        if (status != OpportunityStatus.RASCUNHO && status != OpportunityStatus.PUBLICADA) {
-            throw new BusinessException("Only draft or published opportunities can be edited");
+        if (status != OpportunityStatus.DRAFT) {
+            throw new BusinessException("Only draft opportunities can be edited");
         }
-        Objects.requireNonNull(details, "Details are required");
-        if (status == OpportunityStatus.PUBLICADA) {
-            requireFutureEnd(details.registrationEndsAt(), now);
-        }
-        applyDetails(details);
-        updatedAt = timestamp(now);
+        apply(details);
     }
 
     public void publish(Instant now) {
         requireNotDeleted();
-        if (status != OpportunityStatus.RASCUNHO) {
+        if (status != OpportunityStatus.DRAFT) {
             throw new BusinessException("Only draft opportunities can be published");
         }
-        requireFutureEnd(registrationEndsAt, now);
-        status = OpportunityStatus.PUBLICADA;
+        if (!registrationEndsAt.isAfter(now)) {
+            throw new BusinessException("Registration must end in the future");
+        }
+        if (!recruiter.isAuthorized()) {
+            throw new BusinessException("Recruiter is not authorized to publish opportunities");
+        }
+        status = OpportunityStatus.PUBLISHED;
         updatedAt = timestamp(now);
     }
 
     public void close(Instant now) {
         requireNotDeleted();
-        if (status != OpportunityStatus.PUBLICADA) {
+        if (status == OpportunityStatus.CLOSED) return;
+        if (status != OpportunityStatus.PUBLISHED) {
             throw new BusinessException("Only published opportunities can be closed");
         }
-        status = OpportunityStatus.ENCERRADA;
+        status = OpportunityStatus.CLOSED;
         updatedAt = timestamp(now);
     }
 
@@ -121,15 +126,20 @@ public class Opportunity {
         updatedAt = deletedAt;
     }
 
-    public boolean canReceiveApplications(Instant now) {
-        return deletedAt == null
-                && status == OpportunityStatus.PUBLICADA
-                && !now.isBefore(registrationStartsAt)
-                && now.isBefore(registrationEndsAt);
+    public boolean belongsTo(Long recruiterId) {
+        return recruiterId != null && recruiterId.equals(recruiter.getId());
     }
 
-    // Funções auxiliares
-    private void applyDetails(OpportunityDetails details) {
+    public boolean isPubliclyAvailable() {
+        return deletedAt == null && status == OpportunityStatus.PUBLISHED;
+    }
+
+    public boolean canReceiveApplications(Instant at) {
+        return isPubliclyAvailable() && !at.isBefore(registrationStartsAt) && !at.isAfter(registrationEndsAt);
+    }
+
+    private void apply(OpportunityDetails details) {
+        Objects.requireNonNull(details, "details must not be null");
         title = details.title();
         description = details.description();
         requirements = details.requirements();
@@ -141,46 +151,25 @@ public class Opportunity {
     }
 
     private void requireNotDeleted() {
-        if (deletedAt != null) {
-            throw new BusinessException("Deleted opportunities cannot be changed");
-        }
+        if (deletedAt != null) throw new BusinessException("Deleted opportunities cannot be changed");
     }
 
-    private static void requireFutureEnd(Instant end, Instant now) {
-        if (!end.isAfter(now)) {
-            throw new BusinessException("Registration must end in the future");
-        }
+    private static Instant timestamp(Instant instant) {
+        return Objects.requireNonNull(instant, "current time must not be null").truncatedTo(ChronoUnit.MICROS);
     }
 
-    private static Instant timestamp(Instant now) {
-        return Objects.requireNonNull(now, "Current time is required").truncatedTo(ChronoUnit.MICROS);
-    }
-
-    public Long getId() {return id;}
-
-    public Recruiter getRecruiter() {return recruiter;}
-
-    public String getTitle() {return title;}
-
-    public String getDescription() {return description;}
-
-    public String getRequirements() {return requirements;}
-
-    public OpportunityModality getModality() {return modality;}
-
-    public String getLocation() {return location;}
-
-    public Integer getVacancyCount() {return vacancyCount;}
-
-    public Instant getRegistrationStartsAt() {return registrationStartsAt;}
-
-    public Instant getRegistrationEndsAt() {return registrationEndsAt;}
-
-    public OpportunityStatus getStatus() {return status;}
-
-    public Instant getCreatedAt() {return createdAt;}
-
-    public Instant getUpdatedAt() {return updatedAt;}
-
-    public Instant getDeletedAt() {return deletedAt;}
+    public Long getId() { return id; }
+    public Recruiter getRecruiter() { return recruiter; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public String getRequirements() { return requirements; }
+    public OpportunityModality getModality() { return modality; }
+    public String getLocation() { return location; }
+    public Integer getVacancyCount() { return vacancyCount; }
+    public Instant getRegistrationStartsAt() { return registrationStartsAt; }
+    public Instant getRegistrationEndsAt() { return registrationEndsAt; }
+    public OpportunityStatus getStatus() { return status; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public Instant getDeletedAt() { return deletedAt; }
 }

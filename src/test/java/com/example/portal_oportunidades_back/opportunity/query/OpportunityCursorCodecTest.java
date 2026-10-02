@@ -11,12 +11,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OpportunityCursorCodecTest {
     private final OpportunityCursorCodec codec = new OpportunityCursorCodec();
-    private final OpportunityFilter filter = new OpportunityFilter(" Java ", OpportunityModality.IC, null, 7L);
+    private final OpportunityFilter filter = new OpportunityFilter(
+            " Java ", OpportunityModality.SCIENTIFIC_INITIATION, null, 7L);
 
     @Test
     void roundTripsAndAcceptsEquivalentNormalizedFilters() {
         String token = codec.encode(new OpportunityCursor(NOW, 123), filter);
-        var decoded = codec.decode(token, new OpportunityFilter("java", OpportunityModality.IC, null, 7L));
+        var decoded = codec.decode(token,
+                new OpportunityFilter("java", OpportunityModality.SCIENTIFIC_INITIATION, null, 7L));
         assertThat(decoded).isEqualTo(new OpportunityCursor(NOW, 123));
         assertThat(token).doesNotContain("+", "/", "=");
     }
@@ -25,7 +27,7 @@ class OpportunityCursorCodecTest {
     void rejectsChangedFilters() {
         String token = codec.encode(new OpportunityCursor(NOW, 123), filter);
         assertThatThrownBy(() -> codec.decode(token,
-                new OpportunityFilter("other", OpportunityModality.IC, null, 7L)))
+                new OpportunityFilter("other", OpportunityModality.SCIENTIFIC_INITIATION, null, 7L)))
                 .isInstanceOf(BadRequestException.class);
     }
 

@@ -1,20 +1,22 @@
 package com.example.portal_oportunidades_back.opportunity.mapper;
 
-import com.example.portal_oportunidades_back.opportunity.dto.*;
-import com.example.portal_oportunidades_back.opportunity.entity.*;
-import com.example.portal_oportunidades_back.profile.entity.Recruiter;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunityCreateRequest;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunityResponse;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunitySummaryResponse;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunityUpdateRequest;
+import com.example.portal_oportunidades_back.opportunity.entity.Opportunity;
+import com.example.portal_oportunidades_back.opportunity.entity.OpportunityDetails;
 import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.Mapping;
 
-@Mapper(
-        componentModel = MappingConstants.ComponentModel.SPRING,
-        unmappedTargetPolicy = ReportingPolicy.ERROR
-)
+@Mapper(componentModel = "spring")
 public interface OpportunityMapper {
-    OpportunityDetails toDetails(CreateOpportunityRequest request);
-    OpportunityDetails toDetails(UpdateOpportunityRequest request);
+    OpportunityDetails toDetails(OpportunityCreateRequest request);
+    OpportunityDetails toDetails(OpportunityUpdateRequest request);
+
+    @Mapping(target = "recruiterId", source = "recruiter.id")
     OpportunityResponse toResponse(Opportunity opportunity);
+
+    @Mapping(target = "recruiterId", source = "recruiter.id")
     OpportunitySummaryResponse toSummary(Opportunity opportunity);
-    RecruiterSummaryResponse toRecruiterSummary(Recruiter recruiter);
 }

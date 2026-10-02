@@ -1,109 +1,83 @@
 package com.example.portal_oportunidades_back.opportunity.controller;
 
-import com.example.portal_oportunidades_back.opportunity.dto.*;
-import com.example.portal_oportunidades_back.opportunity.entity.OpportunityModality;
-import com.example.portal_oportunidades_back.opportunity.entity.OpportunityStatus;
-import com.example.portal_oportunidades_back.opportunity.query.OpportunityFilter;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunityCreateRequest;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunityResponse;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunityUpdateRequest;
 import com.example.portal_oportunidades_back.opportunity.service.OpportunityService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import java.util.List;
 
 @RestController
-@RequestMapping("/opportunities")
-@Tag(name = "Opportunities", description = "Opportunity management without authentication in this phase")
-@ApiResponse(responseCode = "400", description = "Invalid request, filter or cursor",
-        content = @Content(mediaType = "application/problem+json",
-                schema = @Schema(implementation = ProblemDetail.class)))
+@RequestMapping("/api/recruiters/{recruiterId}/opportunities")
+@Tag(name = "Recruiter opportunities")
 public class OpportunityController {
-    private final OpportunityService service;
+    private final OpportunityService opportunityService;
 
-    public OpportunityController(OpportunityService service) { this.service = service; }
+    public OpportunityController(OpportunityService opportunityService) {
+        this.opportunityService = opportunityService;
+    }
 
     @PostMapping
-    @Operation(summary = "Create a complete draft opportunity")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Draft created"),
-            @ApiResponse(responseCode = "404", description = "Recruiter not found",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-    })
-    public ResponseEntity<OpportunityResponse> create(@Valid @RequestBody CreateOpportunityRequest request) {
-        OpportunityResponse response = service.create(request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(response.id()).toUri();
+    @Operation(summary = "Create an opportunity as a draft")
+    public ResponseEntity<OpportunityResponse> create(@PathVariable Long recruiterId,
+            @Valid @RequestBody OpportunityCreateRequest request) {
+        OpportunityResponse response = opportunityService.create(recruiterId, request);
+        URI location = URI.create("/api/recruiters/%d/opportunities/%d".formatted(recruiterId, response.id()));
         return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping
-    @Operation(summary = "List non-deleted opportunities using a forward cursor",
-            description = "Sorted by createdAt DESC and id DESC. Keep filters unchanged when sending nextCursor.")
-    public OpportunityCursorResponse list(
-            @Parameter(description = "Opaque nextCursor from the previous response")
-            @RequestParam(name = "cursor", required = false) @Size(max = 1024) String cursor,
-            @RequestParam(name = "limit", defaultValue = "20") @Min(1) @Max(100) int limit,
-            @RequestParam(name = "title", required = false) @Size(max = 200) String title,
-            @RequestParam(name = "modality", required = false) OpportunityModality modality,
-            @RequestParam(name = "status", required = false) OpportunityStatus status,
-            @RequestParam(name = "recruiterId", required = false) @Positive Long recruiterId) {
-        return service.list(new OpportunityFilter(title, modality, status, recruiterId), cursor, limit);
+    @Operation(summary = "List opportunities owned by a recruiter")
+    public ResponseEntity<List<OpportunityResponse>> listOwned(@PathVariable Long recruiterId) {
+        return ResponseEntity.ok(opportunityService.listOwned(recruiterId));
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get a non-deleted opportunity")
-    @ApiResponse(responseCode = "404", description = "Opportunity not found",
-            content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-    public OpportunityResponse findById(@PathVariable("id") @Positive Long id) { return service.findById(id); }
+    @GetMapping("/{opportunityId}")
+    @Operation(summary = "Get an opportunity owned by a recruiter")
+    public ResponseEntity<OpportunityResponse> getOwned(@PathVariable Long recruiterId,
+            @PathVariable Long opportunityId) {
+        return ResponseEntity.ok(opportunityService.getOwned(recruiterId, opportunityId));
+    }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Replace editable details of a draft or published opportunity")
-    @ApiResponses({
-            @ApiResponse(responseCode = "404", description = "Opportunity not found",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "409", description = "State or concurrent update conflict",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-    })
-    public OpportunityResponse update(@PathVariable("id") @Positive Long id,
-            @Valid @RequestBody UpdateOpportunityRequest request) { return service.update(id, request); }
+    @PutMapping("/{opportunityId}")
+    @Operation(summary = "Update a draft opportunity owned by a recruiter")
+    public ResponseEntity<OpportunityResponse> update(@PathVariable Long recruiterId,
+            @PathVariable Long opportunityId, @Valid @RequestBody OpportunityUpdateRequest request) {
+        return ResponseEntity.ok(opportunityService.update(recruiterId, opportunityId, request));
+    }
 
-    @PostMapping("/{id}/publish")
-    @Operation(summary = "Publish a draft whose registration end is in the future")
-    @ApiResponses({
-            @ApiResponse(responseCode = "404", description = "Opportunity not found",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "409", description = "State, deadline or concurrent update conflict",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-    })
-    public OpportunityResponse publish(@PathVariable("id") @Positive Long id) { return service.publish(id); }
+    @PostMapping("/{opportunityId}/publish")
+    @Operation(summary = "Publish a draft opportunity")
+    public ResponseEntity<OpportunityResponse> publish(@PathVariable Long recruiterId,
+            @PathVariable Long opportunityId) {
+        return ResponseEntity.ok(opportunityService.publish(recruiterId, opportunityId));
+    }
 
-    @PostMapping("/{id}/close")
+    @PostMapping("/{opportunityId}/close")
     @Operation(summary = "Close a published opportunity")
-    @ApiResponses({
-            @ApiResponse(responseCode = "404", description = "Opportunity not found",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "409", description = "State or concurrent update conflict",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-    })
-    public OpportunityResponse close(@PathVariable("id") @Positive Long id) { return service.close(id); }
+    public ResponseEntity<OpportunityResponse> close(@PathVariable Long recruiterId,
+            @PathVariable Long opportunityId) {
+        return ResponseEntity.ok(opportunityService.close(recruiterId, opportunityId));
+    }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{opportunityId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Soft delete an opportunity without removing its applications")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Opportunity soft deleted", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Opportunity not found",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-            @ApiResponse(responseCode = "409", description = "Concurrent update conflict",
-                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-    })
-    public void delete(@PathVariable("id") @Positive Long id) { service.delete(id); }
+    @Operation(summary = "Soft delete an opportunity owned by a recruiter")
+    public void delete(@PathVariable Long recruiterId, @PathVariable Long opportunityId) {
+        opportunityService.delete(recruiterId, opportunityId);
+    }
 }
