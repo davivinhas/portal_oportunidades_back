@@ -4,6 +4,7 @@ import com.example.portal_oportunidades_back.exception.BusinessException;
 import com.example.portal_oportunidades_back.exception.ForbiddenOperationException;
 import com.example.portal_oportunidades_back.opportunity.dto.OpportunityCreateRequest;
 import com.example.portal_oportunidades_back.opportunity.dto.OpportunityResponse;
+import com.example.portal_oportunidades_back.opportunity.dto.OpportunityUpdateRequest;
 import com.example.portal_oportunidades_back.opportunity.entity.Opportunity;
 import com.example.portal_oportunidades_back.opportunity.entity.OpportunityModality;
 import com.example.portal_oportunidades_back.opportunity.mapper.OpportunityMapper;
@@ -71,10 +72,12 @@ class OpportunityServiceTest {
         OpportunityResponse response = mock(OpportunityResponse.class);
         when(opportunityRepository.findById(20L)).thenReturn(Optional.of(opportunity));
         when(opportunity.belongsTo(10L)).thenReturn(true);
+        when(opportunity.getRecruiter()).thenReturn(recruiter);
+        when(recruiter.isAuthorized()).thenReturn(true);
         when(opportunityMapper.toResponse(opportunity)).thenReturn(response);
 
         assertSame(response, service.publish(10L, 20L));
-        verify(opportunity).publish();
+        verify(opportunity).publish(any(Instant.class));
     }
 
     @Test
@@ -82,14 +85,48 @@ class OpportunityServiceTest {
         OpportunityResponse response = mock(OpportunityResponse.class);
         when(opportunityRepository.findById(20L)).thenReturn(Optional.of(opportunity));
         when(opportunity.belongsTo(10L)).thenReturn(true);
+        when(opportunity.getRecruiter()).thenReturn(recruiter);
+        when(recruiter.isAuthorized()).thenReturn(true);
         when(opportunityMapper.toResponse(opportunity)).thenReturn(response);
 
         assertSame(response, service.close(10L, 20L));
         verify(opportunity).close();
     }
 
+    @Test
+    void shouldRejectUpdateForUnauthorizedRecruiter() {
+        when(opportunityRepository.findById(20L)).thenReturn(Optional.of(opportunity));
+        when(opportunity.belongsTo(10L)).thenReturn(true);
+        when(opportunity.getRecruiter()).thenReturn(recruiter);
+        when(recruiter.isAuthorized()).thenReturn(false);
+
+        ForbiddenOperationException exception = assertThrows(ForbiddenOperationException.class,
+                () -> service.update(10L, 20L, updateRequest()));
+
+        assertEquals("Recruiter is not authorized to manage opportunities", exception.getMessage());
+        verify(opportunity, never()).updateDetails(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void shouldRejectCloseForUnauthorizedRecruiter() {
+        when(opportunityRepository.findById(20L)).thenReturn(Optional.of(opportunity));
+        when(opportunity.belongsTo(10L)).thenReturn(true);
+        when(opportunity.getRecruiter()).thenReturn(recruiter);
+        when(recruiter.isAuthorized()).thenReturn(false);
+
+        assertThrows(ForbiddenOperationException.class, () -> service.close(10L, 20L));
+
+        verify(opportunity, never()).close();
+    }
+
     private OpportunityCreateRequest request() {
         return new OpportunityCreateRequest("Title", "Description", "Java",
+                OpportunityModality.INTERNSHIP, "Remote", 2,
+                Instant.parse("2030-01-01T00:00:00Z"), Instant.parse("2030-02-01T00:00:00Z"));
+    }
+
+    private OpportunityUpdateRequest updateRequest() {
+        return new OpportunityUpdateRequest("Updated title", "Updated description", "Java",
                 OpportunityModality.INTERNSHIP, "Remote", 2,
                 Instant.parse("2030-01-01T00:00:00Z"), Instant.parse("2030-02-01T00:00:00Z"));
     }

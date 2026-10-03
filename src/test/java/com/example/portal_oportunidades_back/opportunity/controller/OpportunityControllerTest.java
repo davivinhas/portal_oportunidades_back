@@ -9,6 +9,7 @@ import com.example.portal_oportunidades_back.opportunity.service.OpportunityServ
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -82,6 +83,17 @@ class OpportunityControllerTest {
         mockMvc.perform(post("/api/recruiters/10/opportunities/20/close"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.message").value("Invalid transition"));
+    }
+
+    @Test
+    void shouldReturnConflictForConcurrentModification() throws Exception {
+        when(service.publish(10L, 20L)).thenThrow(
+                new ObjectOptimisticLockingFailureException("Opportunity", 20L));
+
+        mockMvc.perform(post("/api/recruiters/10/opportunities/20/publish"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(
+                        "Resource was modified by another request. Reload it and try again"));
     }
 
     private String validRequest() {

@@ -14,6 +14,7 @@ import com.example.portal_oportunidades_back.profile.repository.RecruiterReposit
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -58,6 +59,7 @@ public class OpportunityService {
     @Transactional
     public OpportunityResponse update(Long recruiterId, Long opportunityId, OpportunityUpdateRequest request) {
         Opportunity opportunity = findOwned(recruiterId, opportunityId);
+        ensureAuthorized(opportunity.getRecruiter());
         opportunity.updateDetails(request.title(), request.description(), request.requirements(),
                 request.modality(), request.location(), request.vacancyCount(),
                 request.registrationStartsAt(), request.registrationEndsAt());
@@ -67,13 +69,15 @@ public class OpportunityService {
     @Transactional
     public OpportunityResponse publish(Long recruiterId, Long opportunityId) {
         Opportunity opportunity = findOwned(recruiterId, opportunityId);
-        opportunity.publish();
+        ensureAuthorized(opportunity.getRecruiter());
+        opportunity.publish(Instant.now());
         return opportunityMapper.toResponse(opportunity);
     }
 
     @Transactional
     public OpportunityResponse close(Long recruiterId, Long opportunityId) {
         Opportunity opportunity = findOwned(recruiterId, opportunityId);
+        ensureAuthorized(opportunity.getRecruiter());
         opportunity.close();
         return opportunityMapper.toResponse(opportunity);
     }
@@ -90,6 +94,12 @@ public class OpportunityService {
     private Recruiter findRecruiter(Long recruiterId) {
         return recruiterRepository.findById(recruiterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recruiter not found: " + recruiterId));
+    }
+
+    private void ensureAuthorized(Recruiter recruiter) {
+        if (!recruiter.isAuthorized()) {
+            throw new ForbiddenOperationException("Recruiter is not authorized to manage opportunities");
+        }
     }
 
     private void ensureRecruiterExists(Long recruiterId) {

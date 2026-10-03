@@ -26,7 +26,7 @@ class OpportunityTest {
     void shouldPublishAuthorizedRecruiterOpportunity() {
         Opportunity opportunity = opportunity(authorizedRecruiter());
 
-        opportunity.publish();
+        opportunity.publish(START.minusSeconds(1));
 
         assertEquals(OpportunityStatus.PUBLISHED, opportunity.getStatus());
         assertTrue(opportunity.canReceiveApplications(START));
@@ -41,7 +41,8 @@ class OpportunityTest {
         when(recruiter.isAuthorized()).thenReturn(false);
         Opportunity opportunity = opportunity(recruiter);
 
-        BusinessException exception = assertThrows(BusinessException.class, opportunity::publish);
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> opportunity.publish(START.minusSeconds(1)));
 
         assertEquals("Recruiter is not authorized to publish opportunities", exception.getMessage());
         assertEquals(OpportunityStatus.DRAFT, opportunity.getStatus());
@@ -50,7 +51,7 @@ class OpportunityTest {
     @Test
     void shouldOnlyEditDraftOpportunity() {
         Opportunity opportunity = opportunity(authorizedRecruiter());
-        opportunity.publish();
+        opportunity.publish(START.minusSeconds(1));
 
         assertThrows(BusinessException.class, () -> opportunity.updateDetails(
                 "New title", "New description", null, OpportunityModality.INTERNSHIP,
@@ -60,7 +61,7 @@ class OpportunityTest {
     @Test
     void shouldClosePublishedOpportunityIdempotently() {
         Opportunity opportunity = opportunity(authorizedRecruiter());
-        opportunity.publish();
+        opportunity.publish(START.minusSeconds(1));
 
         opportunity.close();
         opportunity.close();
@@ -74,6 +75,26 @@ class OpportunityTest {
         assertThrows(BusinessException.class, () -> new Opportunity(
                 authorizedRecruiter(), "Title", "Description", null,
                 OpportunityModality.INTERNSHIP, null, 1, END, START));
+    }
+
+    @Test
+    void shouldRejectPublicationWhenRegistrationPeriodHasEnded() {
+        Opportunity opportunity = opportunity(authorizedRecruiter());
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> opportunity.publish(END));
+
+        assertEquals("Registration period has already ended", exception.getMessage());
+        assertEquals(OpportunityStatus.DRAFT, opportunity.getStatus());
+    }
+
+    @Test
+    void shouldPublishWhileRegistrationPeriodIsOpen() {
+        Opportunity opportunity = opportunity(authorizedRecruiter());
+
+        opportunity.publish(START);
+
+        assertEquals(OpportunityStatus.PUBLISHED, opportunity.getStatus());
     }
 
     private Opportunity opportunity(Recruiter recruiter) {

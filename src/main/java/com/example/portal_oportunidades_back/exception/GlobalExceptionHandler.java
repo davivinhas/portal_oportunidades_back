@@ -3,6 +3,7 @@ package com.example.portal_oportunidades_back.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -30,6 +31,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleBusiness(
             BusinessException exception, HttpServletRequest request) {
         return response(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLock(
+            ObjectOptimisticLockingFailureException exception, HttpServletRequest request) {
+        return response(HttpStatus.CONFLICT,
+                "Resource was modified by another request. Reload it and try again", request, Map.of());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

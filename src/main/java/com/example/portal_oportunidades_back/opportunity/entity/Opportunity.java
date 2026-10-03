@@ -18,6 +18,9 @@ public class Opportunity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Version
+    @Column(name = "versao", nullable = false)
+    private Long version;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "recrutador_id", nullable = false)
     private Recruiter recruiter;
@@ -74,12 +77,16 @@ public class Opportunity {
                 registrationStartsAt, registrationEndsAt);
     }
 
-    public void publish() {
+    public void publish(Instant publishedAt) {
+        Objects.requireNonNull(publishedAt, "publishedAt must not be null");
         if (status != OpportunityStatus.DRAFT) {
             throw new BusinessException("Only draft opportunities can be published");
         }
         if (!recruiter.isAuthorized()) {
             throw new BusinessException("Recruiter is not authorized to publish opportunities");
+        }
+        if (!registrationEndsAt.isAfter(publishedAt)) {
+            throw new BusinessException("Registration period has already ended");
         }
         status = OpportunityStatus.PUBLISHED;
     }
@@ -138,6 +145,7 @@ public class Opportunity {
     }
 
     public Long getId() { return id; }
+    public Long getVersion() { return version; }
     public Recruiter getRecruiter() { return recruiter; }
     public Administrator getEvaluator() { return evaluator; }
     public String getTitle() { return title; }
