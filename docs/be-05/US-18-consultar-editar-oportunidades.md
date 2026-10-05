@@ -11,8 +11,11 @@ Permitir que o recrutador consulte e edite somente oportunidades sob sua respons
 - Atualização: `PUT /api/recruiters/{recruiterId}/opportunities/{opportunityId}`.
 - `OpportunityService` carrega a oportunidade e valida a propriedade antes de qualquer operação.
 - Tentativas de acesso a recursos de outro recrutador retornam `403 Forbidden`.
+- Um recrutador cuja autorização foi revogada não pode editar, publicar, encerrar ou remover
+  oportunidades.
 - Somente oportunidades em `DRAFT` podem ter seus dados editados.
 - A atualização utiliza dirty checking e não chama `save` para entidades carregadas.
+- A entidade usa `@Version`; alterações concorrentes com uma versão desatualizada retornam `409 Conflict`.
 
 ## Testes
 

@@ -1,6 +1,7 @@
 package com.example.portal_oportunidades_back.opportunity.entity;
 
 import com.example.portal_oportunidades_back.exception.BusinessException;
+import com.example.portal_oportunidades_back.auth.entity.Administrator;
 import com.example.portal_oportunidades_back.profile.entity.Recruiter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -76,8 +77,12 @@ public class Opportunity {
     private Instant deletedAt;
 
     @Version
-    @Column(nullable = false)
-    private long version;
+    @Column(name = "versao", nullable = false)
+    private Long version;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avaliador_id")
+    private Administrator evaluator;
 
     protected Opportunity() { }
 
@@ -159,7 +164,9 @@ public class Opportunity {
     }
 
     public Long getId() { return id; }
+    public Long getVersion() { return version; }
     public Recruiter getRecruiter() { return recruiter; }
+    public Administrator getEvaluator() { return evaluator; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String getRequirements() { return requirements; }

@@ -66,19 +66,19 @@ class DatabaseIntegrationIT {
         assertThat(jdbcClient.sql("""
                 SELECT count(*) FROM information_schema.columns
                 WHERE table_schema = 'oportunidades' AND table_name = 'oportunidade'
-                  AND column_name = 'version' AND data_type = 'bigint'
+                  AND column_name = 'versao' AND data_type = 'bigint'
                 """).query(Long.class).single()).isEqualTo(1L);
-        assertThat(jdbcClient.sql("SELECT count(*) FROM databasechangelog WHERE id = '20261002-opportunity-version'")
+        assertThat(jdbcClient.sql("SELECT count(*) FROM databasechangelog WHERE id = '20261003-add-opportunity-version'")
                 .query(Long.class).single()).isEqualTo(1L);
 
         OpportunityResponse created = create("Versioned schema opportunity");
-        Long initialVersion = jdbcClient.sql("SELECT version FROM oportunidades.oportunidade WHERE id = :id")
+        Long initialVersion = jdbcClient.sql("SELECT versao FROM oportunidades.oportunidade WHERE id = :id")
                 .param("id", created.id()).query(Long.class).single();
         opportunityService.update(recruiterId, created.id(), new com.example.portal_oportunidades_back.opportunity.dto.OpportunityUpdateRequest(
                 "Version updated", created.description(), created.requirements(), created.modality(),
                 created.location(), created.vacancyCount(), created.registrationStartsAt(), created.registrationEndsAt()));
         opportunityRepository.flush();
-        Long updatedVersion = jdbcClient.sql("SELECT version FROM oportunidades.oportunidade WHERE id = :id")
+        Long updatedVersion = jdbcClient.sql("SELECT versao FROM oportunidades.oportunidade WHERE id = :id")
                 .param("id", created.id()).query(Long.class).single();
         assertThat(updatedVersion).isGreaterThan(initialVersion);
     }

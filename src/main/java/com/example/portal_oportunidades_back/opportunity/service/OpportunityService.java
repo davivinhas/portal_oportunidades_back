@@ -69,6 +69,7 @@ public class OpportunityService {
     @Transactional
     public OpportunityResponse update(Long recruiterId, Long opportunityId, OpportunityUpdateRequest request) {
         Opportunity opportunity = findOwned(recruiterId, opportunityId);
+        ensureAuthorized(opportunity.getRecruiter());
         opportunity.updateDetails(mapper.toDetails(request));
         return mapper.toResponse(opportunity);
     }
@@ -76,6 +77,7 @@ public class OpportunityService {
     @Transactional
     public OpportunityResponse publish(Long recruiterId, Long opportunityId) {
         Opportunity opportunity = findOwned(recruiterId, opportunityId);
+        ensureAuthorized(opportunity.getRecruiter());
         opportunity.publish(clock.instant());
         return mapper.toResponse(opportunity);
     }
@@ -83,13 +85,16 @@ public class OpportunityService {
     @Transactional
     public OpportunityResponse close(Long recruiterId, Long opportunityId) {
         Opportunity opportunity = findOwned(recruiterId, opportunityId);
+        ensureAuthorized(opportunity.getRecruiter());
         opportunity.close(clock.instant());
         return mapper.toResponse(opportunity);
     }
 
     @Transactional
     public void delete(Long recruiterId, Long opportunityId) {
-        findOwned(recruiterId, opportunityId).softDelete(clock.instant());
+        Opportunity opportunity = findOwned(recruiterId, opportunityId);
+        ensureAuthorized(opportunity.getRecruiter());
+        opportunity.softDelete(clock.instant());
     }
 
     public OpportunityCursorResponse listPublic(OpportunityFilter filter, String cursorToken, int limit) {
@@ -133,6 +138,12 @@ public class OpportunityService {
     private Recruiter findRecruiter(Long recruiterId) {
         return recruiters.findById(recruiterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recruiter not found: " + recruiterId));
+    }
+
+    private void ensureAuthorized(Recruiter recruiter) {
+        if (!recruiter.isAuthorized()) {
+            throw new ForbiddenOperationException("Recruiter is not authorized to manage opportunities");
+        }
     }
 
     private void ensureRecruiterExists(Long recruiterId) {

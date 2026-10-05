@@ -12,6 +12,8 @@
   utilizados pelo domínio.
 - Um novo changeset adiciona restrições de unicidade, chaves estrangeiras e índices para os
   relacionamentos.
+- O changeset `z20261003-add-opportunity-version.yaml` adiciona a coluna `versao` à oportunidade
+  para controle de concorrência otimista.
 - Um teste de integração com Testcontainers valida todas as migrations, os mapeamentos do Hibernate,
   os enums nativos, a criação e publicação de oportunidades e as consultas aos repositories no
   PostgreSQL 17.
