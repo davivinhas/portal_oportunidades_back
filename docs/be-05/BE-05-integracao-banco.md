@@ -1,0 +1,39 @@
+# BE-05 — Integração com o banco de dados
+
+## Implementações realizadas
+
+- As imagens do PostgreSQL e do Redis foram fixadas em `postgres:17-alpine` e `redis:8-alpine`.
+- As configurações local, cloud, de testes unitários e de integração foram separadas por meio de
+  perfis do Spring.
+- O Liquibase está habilitado nos bancos locais e nos bancos descartáveis utilizados pelos testes.
+- O Liquibase está desabilitado durante a inicialização normal da aplicação com o perfil `cloud`.
+- Os changesets históricos do banco foram recuperados preservando suas identidades originais.
+- Um novo changeset normaliza os valores dos enums nativos do PostgreSQL para os valores em inglês
+  utilizados pelo domínio.
+- Um novo changeset adiciona restrições de unicidade, chaves estrangeiras e índices para os
+  relacionamentos.
+- O changeset `z20261003-add-opportunity-version.yaml` adiciona a coluna `versao` à tabela
+  `oportunidades.oportunidade`, utilizada pelo bloqueio otimista do Hibernate.
+- Um teste de integração com Testcontainers valida todas as migrations, os mapeamentos do Hibernate,
+  os enums nativos, a criação e publicação de oportunidades e as consultas aos repositories no
+  PostgreSQL 17.
+- O teste de integração também simula edição e publicação concorrentes em transações separadas e
+  comprova que uma atualização desatualizada não sobrescreve a publicação já confirmada.
+
+## Banco compartilhado no Supabase
+
+Os changesets anteriores desta branch já foram aplicados manualmente ao banco compartilhado. A
+tentativa de gerar o SQL da migration de versionamento em 3 de outubro de 2026 não alterou o banco,
+pois o pooler do Supabase recusou o tenant/usuário configurado no `.env` com `ENOTFOUND`.
+
+A migration de versionamento foi gerada, revisada, aplicada e conferida no PostgreSQL 17 local. O
+changeset e a coluna `versao` foram encontrados após a execução.
+
+Após corrigir o acesso ao pooler, a equipe deve gerar novamente o SQL contra o Supabase e aplicar o
+changeset pendente por meio de um comando explícito do Liquibase. Os testes automatizados devem
+continuar utilizando o container descartável.
+
+Um dos changesets históricos recuperados mantém o identificador original do autor, embora esse
+identificador não seja mais o nome do projeto. O Liquibase utiliza o ID, o autor e o caminho do
+arquivo como identidade do changeset. Alterar qualquer um desses elementos faria uma migration já
+executada parecer uma migration nova.
