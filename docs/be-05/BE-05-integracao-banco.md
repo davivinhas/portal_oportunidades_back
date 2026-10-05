@@ -12,26 +12,21 @@
   utilizados pelo domínio.
 - Um novo changeset adiciona restrições de unicidade, chaves estrangeiras e índices para os
   relacionamentos.
-- O changeset `z20261003-add-opportunity-version.yaml` adiciona a coluna `versao` à tabela
-  `oportunidades.oportunidade`, utilizada pelo bloqueio otimista do Hibernate.
+- O changeset `z20261003-add-opportunity-version.yaml` adiciona a coluna `versao` à oportunidade
+  para controle de concorrência otimista.
 - Um teste de integração com Testcontainers valida todas as migrations, os mapeamentos do Hibernate,
   os enums nativos, a criação e publicação de oportunidades e as consultas aos repositories no
   PostgreSQL 17.
-- O teste de integração também simula edição e publicação concorrentes em transações separadas e
-  comprova que uma atualização desatualizada não sobrescreve a publicação já confirmada.
 
 ## Banco compartilhado no Supabase
 
-Os changesets anteriores desta branch já foram aplicados manualmente ao banco compartilhado. A
-tentativa de gerar o SQL da migration de versionamento em 3 de outubro de 2026 não alterou o banco,
-pois o pooler do Supabase recusou o tenant/usuário configurado no `.env` com `ENOTFOUND`.
+O banco compartilhado foi inspecionado em modo somente leitura. Ele utiliza PostgreSQL 17 e ainda
+mantém os valores antigos dos enums em português. Nenhuma migration desta branch foi aplicada ao
+Supabase.
 
-A migration de versionamento foi gerada, revisada, aplicada e conferida no PostgreSQL 17 local. O
-changeset e a coluna `versao` foram encontrados após a execução.
-
-Após corrigir o acesso ao pooler, a equipe deve gerar novamente o SQL contra o Supabase e aplicar o
-changeset pendente por meio de um comando explícito do Liquibase. Os testes automatizados devem
-continuar utilizando o container descartável.
+Antes da implantação, a equipe deve revisar o SQL gerado e aplicar os changesets pendentes por meio
+de um comando explícito do Liquibase. Os testes automatizados devem continuar utilizando o container
+descartável.
 
 Um dos changesets históricos recuperados mantém o identificador original do autor, embora esse
 identificador não seja mais o nome do projeto. O Liquibase utiliza o ID, o autor e o caminho do

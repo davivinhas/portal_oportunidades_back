@@ -28,6 +28,7 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <liquibase-hibernate.version>5.0.3</liquibase-hibernate.version>
         <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
     <dependencies>
@@ -169,17 +170,23 @@
                     <defaultSchemaName>public</defaultSchemaName>
                     <referenceDriver>liquibase.ext.hibernate.database.connection.HibernateDriver</referenceDriver>
                     <referenceUrl>hibernate:spring:com.example.portal_oportunidades_back?dialect=org.hibernate.dialect.PostgreSQLDialect</referenceUrl>
+                    <diffChangeLogFile>src/main/resources/db/changelog/changes/generated-diff.yaml</diffChangeLogFile>
                     <includeArtifact>true</includeArtifact>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.liquibase.ext</groupId>
                         <artifactId>liquibase-hibernate7</artifactId>
-                        <version>5.0.3</version>
+                        <version>${liquibase-hibernate.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-starter-data-jpa</artifactId>
+                        <version>${project.parent.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-validation</artifactId>
                         <version>${project.parent.version}</version>
                     </dependency>
                     <dependency>

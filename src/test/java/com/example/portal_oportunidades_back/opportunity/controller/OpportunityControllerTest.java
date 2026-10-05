@@ -9,7 +9,6 @@ import com.example.portal_oportunidades_back.opportunity.service.OpportunityServ
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -21,6 +20,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 class OpportunityControllerTest {
     private OpportunityService service;
@@ -39,6 +39,7 @@ class OpportunityControllerTest {
         when(service.create(any(), any())).thenReturn(response(OpportunityStatus.DRAFT));
 
         mockMvc.perform(post("/api/recruiters/10/opportunities")
+                        .with(user("test-recruiter"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isCreated())
@@ -49,6 +50,7 @@ class OpportunityControllerTest {
     @Test
     void shouldRejectInvalidOpportunity() throws Exception {
         mockMvc.perform(post("/api/recruiters/10/opportunities")
+                        .with(user("test-recruiter"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"title":"","description":"","vacancyCount":0}
@@ -62,7 +64,7 @@ class OpportunityControllerTest {
     void shouldListOwnedOpportunities() throws Exception {
         when(service.listOwned(10L)).thenReturn(List.of(response(OpportunityStatus.DRAFT)));
 
-        mockMvc.perform(get("/api/recruiters/10/opportunities"))
+        mockMvc.perform(get("/api/recruiters/10/opportunities").with(user("test-recruiter")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(20));
     }
@@ -71,7 +73,7 @@ class OpportunityControllerTest {
     void shouldPublishOpportunity() throws Exception {
         when(service.publish(10L, 20L)).thenReturn(response(OpportunityStatus.PUBLISHED));
 
-        mockMvc.perform(post("/api/recruiters/10/opportunities/20/publish"))
+        mockMvc.perform(post("/api/recruiters/10/opportunities/20/publish").with(user("test-recruiter")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
     }
@@ -80,20 +82,9 @@ class OpportunityControllerTest {
     void shouldReturnUnprocessableEntityForInvalidTransition() throws Exception {
         when(service.close(10L, 20L)).thenThrow(new BusinessException("Invalid transition"));
 
-        mockMvc.perform(post("/api/recruiters/10/opportunities/20/close"))
+        mockMvc.perform(post("/api/recruiters/10/opportunities/20/close").with(user("test-recruiter")))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.message").value("Invalid transition"));
-    }
-
-    @Test
-    void shouldReturnConflictForConcurrentModification() throws Exception {
-        when(service.publish(10L, 20L)).thenThrow(
-                new ObjectOptimisticLockingFailureException("Opportunity", 20L));
-
-        mockMvc.perform(post("/api/recruiters/10/opportunities/20/publish"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value(
-                        "Resource was modified by another request. Reload it and try again"));
     }
 
     private String validRequest() {

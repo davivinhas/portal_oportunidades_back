@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 class RecruiterControllerTest {
     private RecruiterService service;
@@ -34,7 +35,7 @@ class RecruiterControllerTest {
         when(service.getProfile(10L)).thenReturn(new RecruiterResponse(
                 10L, RecruiterType.COMPANY, "Company", true, null, null));
 
-        mockMvc.perform(get("/api/recruiters/10/profile"))
+        mockMvc.perform(get("/api/recruiters/10/profile").with(user("test-recruiter")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.organizationName").value("Company"));
@@ -43,6 +44,7 @@ class RecruiterControllerTest {
     @Test
     void shouldRejectInvalidProfileUpdate() throws Exception {
         mockMvc.perform(put("/api/recruiters/10/profile")
+                        .with(user("test-recruiter"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"COMPANY","organizationName":""}
@@ -57,6 +59,7 @@ class RecruiterControllerTest {
                 10L, RecruiterType.PROFESSOR, "Professor", true, null, null));
 
         mockMvc.perform(put("/api/recruiters/10/profile")
+                        .with(user("test-recruiter"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type":"PROFESSOR","organizationName":"Professor"}
