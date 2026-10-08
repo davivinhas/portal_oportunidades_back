@@ -29,11 +29,11 @@ public class PublicOpportunityController {
     public OpportunityCursorResponse list(
             @RequestParam(required = false) @Size(max = 1024) String cursor,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
-            @RequestParam(required = false) @Size(max = 200) String title,
+            @RequestParam(required = false) @Size(max = 200) String q,
             @RequestParam(required = false) OpportunityModality modality,
             @RequestParam(required = false) OpportunityStatus status,
             @RequestParam(required = false) @Positive Long recruiterId) {
-        return service.listPublic(new OpportunityFilter(title, modality, status, recruiterId), cursor, limit);
+        return service.listPublic(new OpportunityFilter(q, modality, status, recruiterId), cursor, limit);
     }
 
     @GetMapping("/{id}")
