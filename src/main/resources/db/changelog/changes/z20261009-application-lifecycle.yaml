@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261009-application-cancelled-status
+      author: backend-team
+      runInTransaction: false
+      changes:
+        - sql:
+            sql: ALTER TYPE oportunidades.status_candidatura ADD VALUE IF NOT EXISTS 'CANCELLED';
+      rollback:
+        - sql:
+            sql: SELECT 1; -- Preserve the additive enum value to avoid losing cancelled records.
+  - changeSet:
+      id: 20261009-application-lifecycle
+      author: backend-team
+      changes:
+        - addColumn:
+            schemaName: oportunidades
+            tableName: candidatura
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            schemaName: oportunidades
+            tableName: candidatura
+            columnNames: aluno_id, oportunidade_id
+            constraintName: uk_application_student_opportunity
+        - createIndex:
+            schemaName: oportunidades
+            tableName: candidatura
+            indexName: idx_application_student_date
+            columns:
+              - column:
+                  name: aluno_id
+              - column:
+                  name: data_candidatura
+                  descending: true
+              - column:
+                  name: id
+                  descending: true
+      rollback:
+        - dropIndex:
+            schemaName: oportunidades
+            tableName: candidatura
+            indexName: idx_application_student_date
+        - dropUniqueConstraint:
+            schemaName: oportunidades
+            tableName: candidatura
+            constraintName: uk_application_student_opportunity
+        - dropColumn:
+            schemaName: oportunidades
+            tableName: candidatura
+            columnName: version
