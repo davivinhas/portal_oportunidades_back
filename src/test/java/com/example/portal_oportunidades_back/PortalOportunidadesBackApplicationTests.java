@@ -17,6 +17,18 @@ class PortalOportunidadesBackApplicationTests {
     @MockitoBean
     private RecruiterRepository recruiterRepository;
 
+    @MockitoBean
+    private com.example.portal_oportunidades_back.profile.repository.StudentRepository studentRepository;
+
+    @MockitoBean
+    private com.example.portal_oportunidades_back.profile.repository.ProfessionalExperienceRepository professionalExperienceRepository;
+
+    @MockitoBean
+    private com.example.portal_oportunidades_back.auth.repository.UserRepository userRepository;
+
+    @MockitoBean
+    private jakarta.persistence.EntityManager entityManager;
+
     @Test
     void contextLoads() {
     }

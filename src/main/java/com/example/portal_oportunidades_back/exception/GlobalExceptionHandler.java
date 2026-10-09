@@ -20,6 +20,11 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleIntegrityConflict(
+            org.springframework.dao.DataIntegrityViolationException exception, HttpServletRequest request) {
+        return response(HttpStatus.CONFLICT, "Request conflicts with existing data or a database constraint", request, Map.of());
+    }
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException exception,
             HttpServletRequest request) {
@@ -48,7 +53,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleConcurrentUpdate(OptimisticLockingFailureException exception,
             HttpServletRequest request) {
         return response(HttpStatus.CONFLICT,
-                "Opportunity was modified concurrently; reload it and try again", request, Map.of());
+                "Resource was modified concurrently; reload it and try again", request, Map.of());
     }
 
     @Override
