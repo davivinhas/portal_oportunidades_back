@@ -20,6 +20,11 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflict(ConflictException exception, HttpServletRequest request) {
+        return response(HttpStatus.CONFLICT, exception.getMessage(), request, Map.of());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException exception,
             HttpServletRequest request) {
@@ -48,7 +53,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleConcurrentUpdate(OptimisticLockingFailureException exception,
             HttpServletRequest request) {
         return response(HttpStatus.CONFLICT,
-                "Opportunity was modified concurrently; reload it and try again", request, Map.of());
+                "Resource was modified concurrently; reload it and try again", request, Map.of());
     }
 
     @Override

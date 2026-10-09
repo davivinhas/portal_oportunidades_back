@@ -27,4 +27,5 @@ public class Student {
     @UpdateTimestamp @Column(name = "atualizado_em", nullable = false)
     private Instant updatedAt;
     protected Student() { }
+    public Long getId() { return id; }
 }
