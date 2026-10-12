@@ -38,7 +38,7 @@ class StudentResumeServiceTest {
 
     @Test
     void wrapsVeryLongWordsWithoutTruncation() throws Exception {
-        String longWord = "x".repeat(3000);
+        String longWord = "x".repeat(9000);
         when(profiles.getProfile(1L)).thenReturn(profile("José", longWord, List.of()));
         try (var document = Loader.loadPDF(service.generate(1L))) {
             assertThat(new PDFTextStripper().getText(document).replaceAll("\\s+", "")).contains(longWord);
