@@ -77,19 +77,22 @@ public class StudentResumeService {
         }
 
         private void text(String value, float size) throws IOException {
-            StringBuilder line = new StringBuilder();
+            float maxWidth = PDRectangle.A4.getWidth() - 2 * MARGIN;
             for (String paragraph : value.split("\\R", -1)) {
+                StringBuilder line = new StringBuilder();
+                float width = 0;
                 for (int codePoint : paragraph.codePoints().toArray()) {
-                    String character = supported(codePoint);
-                    if (font.getStringWidth(line + character) / 1000 * size >
-                            PDRectangle.A4.getWidth() - 2 * MARGIN && !line.isEmpty()) {
+                    String glyph = supported(codePoint);
+                    float glyphWidth = font.getStringWidth(glyph) / 1000f * size;
+                    if (!line.isEmpty() && width + glyphWidth > maxWidth) {
                         write(line.toString(), size);
                         line.setLength(0);
+                        width = 0;
                     }
-                    line.append(character);
+                    line.append(glyph);
+                    width += glyphWidth;
                 }
                 write(line.toString(), size);
-                line.setLength(0);
             }
             y -= 6;
         }

@@ -4,6 +4,9 @@ import com.example.portal_oportunidades_back.exception.*;
 import com.example.portal_oportunidades_back.profile.dto.*;
 import com.example.portal_oportunidades_back.profile.service.*;
 import java.util.List;
+import java.sql.SQLException;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -64,9 +67,19 @@ class StudentProfileControllerTest {
     }
 
     @Test
+    void unexpectedDatabaseConstraintReturnsInternalError() throws Exception {
+        when(profiles.updateProfile(eq(1L), any()))
+                .thenThrow(new DataIntegrityViolationException("unexpected foreign key"));
+        mvc.perform(put("/api/students/1/profile").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"registrationNumber\":\"123\",\"course\":\"Course\",\"experiences\":[]}"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("An internal data integrity error occurred"));
+    }
+
+    @Test
     void mapsDatabaseAndVersionConflicts() throws Exception {
         when(profiles.updateProfile(eq(1L), any()))
-                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("Duplicate registration"))
+                .thenThrow(new DataIntegrityViolationException("Duplicate registration", new ConstraintViolationException("duplicate", new SQLException("duplicate", "23505"), "uk_aluno_matricula")))
                 .thenThrow(new org.springframework.orm.ObjectOptimisticLockingFailureException("Student", 1L));
         for (int attempt = 0; attempt < 2; attempt++)
             mvc.perform(put("/api/students/1/profile").contentType(MediaType.APPLICATION_JSON)

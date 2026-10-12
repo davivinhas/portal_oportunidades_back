@@ -42,6 +42,8 @@ Período, se informado, é positivo; telefone admite até 30 caracteres. Campos 
 em branco são normalizados para null.
 
 experiences é obrigatório e representa a lista completa, com no máximo 100 itens.
+O frontend deve enviar todas as experiências que deseja manter em cada PUT; itens omitidos serão excluídos.
+Este contrato não aceita atualização parcial da lista (PATCH).
 Lista vazia remove todas as experiências. Itens sem ID são criados; com ID são
 atualizados; registros ausentes da lista são excluídos. IDs repetidos retornam 422.
 IDs inexistentes ou pertencentes a outro aluno retornam 403 antes de alterar o perfil.
