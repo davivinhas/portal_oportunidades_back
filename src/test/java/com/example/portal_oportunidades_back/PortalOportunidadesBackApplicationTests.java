@@ -32,6 +32,9 @@ class PortalOportunidadesBackApplicationTests {
     @MockitoBean
     private com.example.portal_oportunidades_back.application.repository.ApplicationRepository applicationRepository;
 
+    @MockitoBean
+    private com.example.portal_oportunidades_back.profile.repository.RecruiterFollowRepository recruiterFollowRepository;
+
     @Test
     void contextLoads() {
     }
