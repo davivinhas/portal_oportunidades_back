@@ -29,6 +29,9 @@ class PortalOportunidadesBackApplicationTests {
     @MockitoBean
     private jakarta.persistence.EntityManager entityManager;
 
+    @MockitoBean
+    private com.example.portal_oportunidades_back.application.repository.ApplicationRepository applicationRepository;
+
     @Test
     void contextLoads() {
     }
