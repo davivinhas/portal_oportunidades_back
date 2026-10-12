@@ -30,8 +30,14 @@
         <java.version>21</java.version>
         <liquibase-hibernate.version>5.0.3</liquibase-hibernate.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <liquibase.diffChangeLogFile>target/liquibase/generated-diff.yaml</liquibase.diffChangeLogFile>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.8</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -170,7 +176,7 @@
                     <defaultSchemaName>public</defaultSchemaName>
                     <referenceDriver>liquibase.ext.hibernate.database.connection.HibernateDriver</referenceDriver>
                     <referenceUrl>hibernate:spring:com.example.portal_oportunidades_back?dialect=org.hibernate.dialect.PostgreSQLDialect</referenceUrl>
-                    <diffChangeLogFile>src/main/resources/db/changelog/changes/generated-diff.yaml</diffChangeLogFile>
+                    <diffChangeLogFile>${liquibase.diffChangeLogFile}</diffChangeLogFile>
                     <includeArtifact>true</includeArtifact>
                 </configuration>
                 <dependencies>

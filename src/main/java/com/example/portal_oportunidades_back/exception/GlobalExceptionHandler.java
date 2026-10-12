@@ -4,6 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,6 +23,25 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflict(ConflictException exception, HttpServletRequest request) {
+        return response(HttpStatus.CONFLICT, exception.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleIntegrityConflict(
+            DataIntegrityViolationException exception, HttpServletRequest request) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException violation
+                    && "uk_aluno_matricula".equalsIgnoreCase(violation.getConstraintName())) {
+                return response(HttpStatus.CONFLICT, "Registration number is already in use", request, Map.of());
+            }
+        }
+        log.error("Unexpected database integrity violation at {}", request.getRequestURI(), exception);
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, "An internal data integrity error occurred", request, Map.of());
+    }
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException exception,
             HttpServletRequest request) {
@@ -48,7 +70,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleConcurrentUpdate(OptimisticLockingFailureException exception,
             HttpServletRequest request) {
         return response(HttpStatus.CONFLICT,
-                "Opportunity was modified concurrently; reload it and try again", request, Map.of());
+                "Resource was modified concurrently; reload it and try again", request, Map.of());
     }
 
     @Override
