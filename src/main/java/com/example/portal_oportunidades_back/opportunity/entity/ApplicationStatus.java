@@ -1,5 +1,5 @@
 package com.example.portal_oportunidades_back.opportunity.entity;
 
 public enum ApplicationStatus {
-    SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED
+    SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, CANCELLED
 }

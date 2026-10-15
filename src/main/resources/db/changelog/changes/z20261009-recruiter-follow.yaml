@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261009-recruiter-follow
+      author: backend-team
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE perfil.recruiter_follow (
+                id UUID PRIMARY KEY,
+                student_id BIGINT NOT NULL REFERENCES perfil.aluno(usuario_id),
+                recruiter_id BIGINT NOT NULL REFERENCES perfil.recrutador(usuario_id),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT uk_recruiter_follow_pair UNIQUE (student_id, recruiter_id)
+              );
+              CREATE INDEX idx_recruiter_follow_recruiter ON perfil.recruiter_follow(recruiter_id);
+      rollback:
+        - dropTable:
+            schemaName: perfil
+            tableName: recruiter_follow

@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261009-student-profile
+      author: backend-team
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE perfil.aluno
+                ALTER COLUMN resumo TYPE TEXT,
+                ALTER COLUMN habilidades TYPE TEXT,
+                ALTER COLUMN interesses TYPE TEXT,
+                ADD COLUMN version BIGINT NOT NULL DEFAULT 0,
+                ADD CONSTRAINT ck_student_semester CHECK (periodo IS NULL OR periodo > 0);
+              ALTER TABLE perfil.experiencia_profissional
+                ALTER COLUMN descricao TYPE TEXT,
+                ADD CONSTRAINT ck_experience_period CHECK (
+                  (atual AND data_fim IS NULL) OR
+                  (NOT atual AND data_fim IS NOT NULL AND data_fim >= data_inicio)
+                );
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE perfil.experiencia_profissional DROP CONSTRAINT ck_experience_period;
+              ALTER TABLE perfil.aluno DROP CONSTRAINT ck_student_semester, DROP COLUMN version;
+              -- Text columns deliberately remain TEXT to avoid truncating existing data.
