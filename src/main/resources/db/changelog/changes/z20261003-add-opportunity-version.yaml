@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261003-add-opportunity-version
+      author: backend-team
+      changes:
+        - addColumn:
+            schemaName: oportunidades
+            tableName: oportunidade
+            columns:
+              - column:
+                  name: versao
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            schemaName: oportunidades
+            tableName: oportunidade
+            columnName: versao

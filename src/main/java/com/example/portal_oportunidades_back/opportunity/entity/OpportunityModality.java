@@ -1,5 +1,5 @@
 package com.example.portal_oportunidades_back.opportunity.entity;
 
 public enum OpportunityModality {
-    ESTAGIO, IC, IT, EXTENSAO, BOLSA, OUTRA
+    INTERNSHIP, SCIENTIFIC_INITIATION, TECHNOLOGICAL_INITIATION, EXTENSION, SCHOLARSHIP, OTHER
 }

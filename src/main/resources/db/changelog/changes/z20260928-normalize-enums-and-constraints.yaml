@@ -1,0 +1,163 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260928-normalize-domain-enums
+      author: backend-team
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'EMPRESA' TO 'COMPANY';
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'LIGA_ACADEMICA' TO 'ACADEMIC_LEAGUE';
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'SETOR_UNIVERSIDADE' TO 'UNIVERSITY_DEPARTMENT';
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'OUTRO' TO 'OTHER';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'ESTAGIO' TO 'INTERNSHIP';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'IC' TO 'SCIENTIFIC_INITIATION';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'IT' TO 'TECHNOLOGICAL_INITIATION';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'EXTENSAO' TO 'EXTENSION';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'BOLSA' TO 'SCHOLARSHIP';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'OUTRA' TO 'OTHER';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'RASCUNHO' TO 'DRAFT';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'PENDENTE_APROVACAO' TO 'PENDING_APPROVAL';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'PUBLICADA' TO 'PUBLISHED';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'REJEITADA' TO 'REJECTED';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'ENCERRADA' TO 'CLOSED';
+      rollback:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'COMPANY' TO 'EMPRESA';
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'ACADEMIC_LEAGUE' TO 'LIGA_ACADEMICA';
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'UNIVERSITY_DEPARTMENT' TO 'SETOR_UNIVERSIDADE';
+              ALTER TYPE perfil.tipo_recrutador RENAME VALUE 'OTHER' TO 'OUTRO';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'INTERNSHIP' TO 'ESTAGIO';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'SCIENTIFIC_INITIATION' TO 'IC';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'TECHNOLOGICAL_INITIATION' TO 'IT';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'EXTENSION' TO 'EXTENSAO';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'SCHOLARSHIP' TO 'BOLSA';
+              ALTER TYPE oportunidades.modalidade_oportunidade RENAME VALUE 'OTHER' TO 'OUTRA';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'DRAFT' TO 'RASCUNHO';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'PENDING_APPROVAL' TO 'PENDENTE_APROVACAO';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'PUBLISHED' TO 'PUBLICADA';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'REJECTED' TO 'REJEITADA';
+              ALTER TYPE oportunidades.status_oportunidade RENAME VALUE 'CLOSED' TO 'ENCERRADA';
+  - changeSet:
+      id: 20260928-add-domain-constraints
+      author: backend-team
+      changes:
+        - addUniqueConstraint:
+            schemaName: app_auth
+            tableName: usuario
+            columnNames: email
+            constraintName: uk_usuario_email
+        - addUniqueConstraint:
+            schemaName: perfil
+            tableName: aluno
+            columnNames: matricula
+            constraintName: uk_aluno_matricula
+        - addForeignKeyConstraint:
+            baseTableSchemaName: app_auth
+            baseTableName: administrador
+            baseColumnNames: usuario_id
+            referencedTableSchemaName: app_auth
+            referencedTableName: usuario
+            referencedColumnNames: id
+            constraintName: fk_administrador_usuario
+        - addForeignKeyConstraint:
+            baseTableSchemaName: perfil
+            baseTableName: aluno
+            baseColumnNames: usuario_id
+            referencedTableSchemaName: app_auth
+            referencedTableName: usuario
+            referencedColumnNames: id
+            constraintName: fk_aluno_usuario
+        - addForeignKeyConstraint:
+            baseTableSchemaName: perfil
+            baseTableName: recrutador
+            baseColumnNames: usuario_id
+            referencedTableSchemaName: app_auth
+            referencedTableName: usuario
+            referencedColumnNames: id
+            constraintName: fk_recrutador_usuario
+        - addForeignKeyConstraint:
+            baseTableSchemaName: oportunidades
+            baseTableName: oportunidade
+            baseColumnNames: recrutador_id
+            referencedTableSchemaName: perfil
+            referencedTableName: recrutador
+            referencedColumnNames: usuario_id
+            constraintName: fk_oportunidade_recrutador
+        - addForeignKeyConstraint:
+            baseTableSchemaName: perfil
+            baseTableName: experiencia_profissional
+            baseColumnNames: aluno_id
+            referencedTableSchemaName: perfil
+            referencedTableName: aluno
+            referencedColumnNames: usuario_id
+            constraintName: fk_experiencia_aluno
+        - addForeignKeyConstraint:
+            baseTableSchemaName: oportunidades
+            baseTableName: oportunidade
+            baseColumnNames: avaliador_id
+            referencedTableSchemaName: app_auth
+            referencedTableName: administrador
+            referencedColumnNames: usuario_id
+            constraintName: fk_oportunidade_avaliador
+        - addForeignKeyConstraint:
+            baseTableSchemaName: oportunidades
+            baseTableName: candidatura
+            baseColumnNames: aluno_id
+            referencedTableSchemaName: perfil
+            referencedTableName: aluno
+            referencedColumnNames: usuario_id
+            constraintName: fk_candidatura_aluno
+        - addForeignKeyConstraint:
+            baseTableSchemaName: oportunidades
+            baseTableName: candidatura
+            baseColumnNames: oportunidade_id
+            referencedTableSchemaName: oportunidades
+            referencedTableName: oportunidade
+            referencedColumnNames: id
+            constraintName: fk_candidatura_oportunidade
+        - addForeignKeyConstraint:
+            baseTableSchemaName: oportunidades
+            baseTableName: notificacao
+            baseColumnNames: usuario_id
+            referencedTableSchemaName: app_auth
+            referencedTableName: usuario
+            referencedColumnNames: id
+            constraintName: fk_notificacao_usuario
+        - createIndex:
+            schemaName: oportunidades
+            tableName: oportunidade
+            indexName: idx_oportunidade_recrutador
+            columns:
+              - column:
+                  name: recrutador_id
+        - createIndex:
+            schemaName: perfil
+            tableName: experiencia_profissional
+            indexName: idx_experiencia_aluno
+            columns:
+              - column:
+                  name: aluno_id
+        - createIndex:
+            schemaName: oportunidades
+            tableName: candidatura
+            indexName: idx_candidatura_aluno
+            columns:
+              - column:
+                  name: aluno_id
+        - createIndex:
+            schemaName: oportunidades
+            tableName: candidatura
+            indexName: idx_candidatura_oportunidade
+            columns:
+              - column:
+                  name: oportunidade_id
+        - createIndex:
+            schemaName: oportunidades
+            tableName: notificacao
+            indexName: idx_notificacao_usuario
+            columns:
+              - column:
+                  name: usuario_id

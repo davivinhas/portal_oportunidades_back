@@ -1,46 +1,53 @@
 # Database migrations
 
-Liquibase is the only mechanism that changes the database schema. Hibernate runs with `spring.jpa.hibernate.ddl-auto=validate` and never creates or updates database objects.
+Liquibase is the only mechanism that changes the database schema. Hibernate uses
+`spring.jpa.hibernate.ddl-auto=validate` and never creates or updates database objects.
 
-## Prerequisites
+## Profiles
 
-Export the Supabase connection variables in the shell. Do not commit their values.
+- `local`: local PostgreSQL from `compose.yaml`; Liquibase is enabled.
+- `integration-test`: disposable PostgreSQL Testcontainer; Liquibase is enabled.
+- `cloud`: shared Supabase database; Liquibase is disabled during application startup.
 
-```bash
-export SUPABASE_DB_URL='jdbc:postgresql://HOST:5432/postgres?sslmode=require'
-export SUPABASE_DB_USERNAME='DATABASE_USER'
-export SUPABASE_DB_PASSWORD='DATABASE_PASSWORD'
-```
-
-## Inspect and validate
+Start the local infrastructure with:
 
 ```bash
-bash ./mvnw liquibase:status
-bash ./mvnw liquibase:validate
+docker compose up -d
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-## Generate a draft from JPA entities
-
-After changing entities, compile the project and generate a timestamped YAML changelog. Review the generated file before adding it to Git.
+Run unit tests independently of infrastructure:
 
 ```bash
-bash ./mvnw compile liquibase:diffChangeLog \
-  -Dliquibase.diffChangeLogFile=src/main/resources/db/changelog/changes/YYYYMMDD_description.yaml
+./mvnw test
 ```
 
-The generated file is a draft. Review and manually correct PostgreSQL enums, partial indexes, SQL defaults, schema creation, renames, and destructive changes when needed.
-
-## Preview and apply
+Run the database integration test in an isolated PostgreSQL 17 container:
 
 ```bash
-bash ./mvnw liquibase:updateSQL
-bash ./mvnw liquibase:update
+./mvnw verify -Pintegration-tests
 ```
 
-The Spring Boot application also applies reviewed pending changesets on startup. Liquibase records applied changesets in `DATABASECHANGELOG`.
+The integration test applies every changeset to a new database and verifies JPA persistence and
+native PostgreSQL enums. The container is discarded after the test, so Supabase data is not read or
+changed.
 
-## Rules
+## Shared database procedure
 
-- Commit every reviewed changeset with the entity changes that require it.
-- Never modify a changeset already applied to a shared database; create a new one instead.
-- Never use `liquibase:clean` against shared or Supabase databases.
+Schema changes in Supabase are deliberate operations. First inspect the SQL generated from the
+reviewed changelog, then apply it only after team approval:
+
+```bash
+./mvnw liquibase:updateSQL \
+  -Dliquibase.url="$SUPABASE_DB_URL" \
+  -Dliquibase.username="$SUPABASE_DB_USERNAME" \
+  -Dliquibase.password="$SUPABASE_DB_PASSWORD"
+
+./mvnw liquibase:update \
+  -Dliquibase.url="$SUPABASE_DB_URL" \
+  -Dliquibase.username="$SUPABASE_DB_USERNAME" \
+  -Dliquibase.password="$SUPABASE_DB_PASSWORD"
+```
+
+Never use `liquibase:clean` against shared or Supabase databases. Never change the identity of an
+already applied changeset; add a new versioned changeset instead.

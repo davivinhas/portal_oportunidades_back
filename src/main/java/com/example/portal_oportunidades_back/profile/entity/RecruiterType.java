@@ -1,5 +1,5 @@
 package com.example.portal_oportunidades_back.profile.entity;
 
 public enum RecruiterType {
-    EMPRESA, PROFESSOR, LIGA_ACADEMICA, SETOR_UNIVERSIDADE, OUTRO
+    COMPANY, PROFESSOR, ACADEMIC_LEAGUE, UNIVERSITY_DEPARTMENT, OTHER
 }

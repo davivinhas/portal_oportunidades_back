@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1789412790437-1
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE app_auth.administrador (usuario_id BIGINT NOT NULL, CONSTRAINT "administradorPK" PRIMARY KEY (usuario_id));
+  - changeSet:
+      id: 1789412790437-2
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE perfil.aluno (usuario_id BIGINT NOT NULL, criado_em TIMESTAMPTZ NOT NULL, curso VARCHAR(150) NOT NULL, habilidades VARCHAR(255), interesses VARCHAR(255), matricula VARCHAR(30) NOT NULL, periodo SMALLINT, resumo VARCHAR(255), telefone VARCHAR(30), atualizado_em TIMESTAMPTZ NOT NULL, CONSTRAINT "alunoPK" PRIMARY KEY (usuario_id));
+  - changeSet:
+      id: 1789412790437-3
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE oportunidades.candidatura (id BIGSERIAL NOT NULL, data_candidatura TIMESTAMPTZ NOT NULL, pontuacao_compatibilidade NUMERIC(5,2), criado_em TIMESTAMPTZ NOT NULL, status oportunidades.status_candidatura NOT NULL, atualizado_em TIMESTAMPTZ NOT NULL, oportunidade_id BIGINT NOT NULL, aluno_id BIGINT NOT NULL, CONSTRAINT "candidaturaPK" PRIMARY KEY (id));
+  - changeSet:
+      id: 1789412790437-4
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE perfil.experiencia_profissional (id BIGSERIAL NOT NULL, atual BOOLEAN NOT NULL, cargo VARCHAR(150) NOT NULL, criado_em TIMESTAMPTZ NOT NULL, descricao VARCHAR(255), data_fim DATE, organizacao VARCHAR(200) NOT NULL, data_inicio DATE NOT NULL, atualizado_em TIMESTAMPTZ NOT NULL, aluno_id BIGINT NOT NULL, CONSTRAINT "experiencia_profissionalPK" PRIMARY KEY (id));
+  - changeSet:
+      id: 1789412790437-5
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE oportunidades.notificacao (id BIGSERIAL NOT NULL, criado_em TIMESTAMPTZ NOT NULL, lida BOOLEAN NOT NULL, mensagem VARCHAR(255) NOT NULL, data_envio TIMESTAMPTZ NOT NULL, titulo VARCHAR(200) NOT NULL, atualizado_em TIMESTAMPTZ NOT NULL, usuario_id BIGINT NOT NULL, CONSTRAINT "notificacaoPK" PRIMARY KEY (id));
+  - changeSet:
+      id: 1789412790437-6
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE oportunidades.oportunidade (id BIGSERIAL NOT NULL, criado_em TIMESTAMPTZ NOT NULL, descricao VARCHAR(255) NOT NULL, localizacao VARCHAR(200), modalidade oportunidades.modalidade_oportunidade NOT NULL, fim_inscricoes TIMESTAMPTZ NOT NULL, inicio_inscricoes TIMESTAMPTZ NOT NULL, requisitos VARCHAR(255), status oportunidades.status_oportunidade NOT NULL, titulo VARCHAR(200) NOT NULL, atualizado_em TIMESTAMPTZ NOT NULL, quantidade_vagas INTEGER NOT NULL, avaliador_id BIGINT, recrutador_id BIGINT NOT NULL, CONSTRAINT "oportunidadePK" PRIMARY KEY (id));
+  - changeSet:
+      id: 1789412790437-7
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE perfil.recrutador (usuario_id BIGINT NOT NULL, autorizado BOOLEAN NOT NULL, criado_em TIMESTAMPTZ NOT NULL, nome_organizacao VARCHAR(200) NOT NULL, tipo perfil.tipo_recrutador NOT NULL, atualizado_em TIMESTAMPTZ NOT NULL, CONSTRAINT "recrutadorPK" PRIMARY KEY (usuario_id));
+  - changeSet:
+      id: 1789412790437-8
+      author: Davi Vinhas (generated)
+      validCheckSum: ANY
+      changes:
+        - sql:
+            sql: CREATE TABLE app_auth.usuario (id BIGSERIAL NOT NULL, active BOOLEAN NOT NULL, criado_em TIMESTAMPTZ NOT NULL, email VARCHAR(255) NOT NULL, name VARCHAR(150) NOT NULL, senha_hash VARCHAR(255) NOT NULL, atualizado_em TIMESTAMPTZ NOT NULL, CONSTRAINT "usuarioPK" PRIMARY KEY (id));
