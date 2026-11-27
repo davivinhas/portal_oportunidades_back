@@ -40,7 +40,7 @@ class OpportunityCursorCodecTest {
         String valid = codec.encode(new OpportunityCursor(NOW, 123), filter);
         String payload = new String(Base64.getUrlDecoder().decode(valid), StandardCharsets.UTF_8);
         String unsupported = Base64.getUrlEncoder().withoutPadding().encodeToString(
-                payload.replaceFirst("1\n", "2\n").getBytes(StandardCharsets.UTF_8));
+                payload.replaceFirst("^2\n", "3\n").getBytes(StandardCharsets.UTF_8));
         assertThatThrownBy(() -> codec.decode(unsupported, filter)).isInstanceOf(BadRequestException.class);
     }
 }

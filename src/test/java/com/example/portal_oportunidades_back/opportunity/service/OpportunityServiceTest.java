@@ -11,6 +11,7 @@ import com.example.portal_oportunidades_back.opportunity.query.OpportunityCursor
 import com.example.portal_oportunidades_back.opportunity.query.OpportunityCursorCodec;
 import com.example.portal_oportunidades_back.opportunity.query.OpportunityFilter;
 import com.example.portal_oportunidades_back.opportunity.repository.OpportunityRepository;
+import com.example.portal_oportunidades_back.opportunity.repository.OpportunitySearchHit;
 import com.example.portal_oportunidades_back.profile.entity.Recruiter;
 import com.example.portal_oportunidades_back.profile.repository.RecruiterRepository;
 import java.time.Clock;
@@ -141,14 +142,34 @@ class OpportunityServiceTest {
             return executor.apply(query);
         });
 
-        OpportunityFilter requestedFilter = new OpportunityFilter(" Research ", null, null, 7L);
+        OpportunityFilter requestedFilter = new OpportunityFilter(null, null, null, 7L);
         var page = service.listPublic(requestedFilter, null, 2);
-        var effectiveFilter = new OpportunityFilter("research", null, OpportunityStatus.PUBLISHED, 7L);
+        var effectiveFilter = new OpportunityFilter(null, null, OpportunityStatus.PUBLISHED, 7L);
 
         assertThat(page.items()).extracting(item -> item.id()).containsExactly(3L, 2L);
         assertThat(page.hasNext()).isTrue();
         assertThat(new OpportunityCursorCodec().decode(page.nextCursor(), effectiveFilter))
                 .isEqualTo(new OpportunityCursor(second.getCreatedAt(), 2L));
+    }
+
+    @Test
+    void paginatesSearchResultsUsingRankOfLastReturnedItem() {
+        Opportunity newest = publishedOpportunity(3);
+        Opportunity second = publishedOpportunity(2);
+        var effectiveFilter = new OpportunityFilter("research", null, OpportunityStatus.PUBLISHED, 7L);
+        when(opportunities.searchPublic(eq(effectiveFilter), any(), isNull(), eq(2)))
+                .thenReturn(List.of(new OpportunitySearchHit(3L, newest.getCreatedAt(), 0.9),
+                        new OpportunitySearchHit(2L, second.getCreatedAt(), 0.8),
+                        new OpportunitySearchHit(1L, NOW, 0.7)));
+        when(opportunities.findAllByIdInAndDeletedAtIsNull(List.of(3L, 2L)))
+                .thenReturn(List.of(second, newest));
+
+        var page = service.listPublic(new OpportunityFilter(" Research ", null, null, 7L), null, 2);
+
+        assertThat(page.items()).extracting(item -> item.id()).containsExactly(3L, 2L);
+        assertThat(page.hasNext()).isTrue();
+        assertThat(new OpportunityCursorCodec().decode(page.nextCursor(), effectiveFilter))
+                .isEqualTo(new OpportunityCursor(0.8, second.getCreatedAt(), 2L));
     }
 
     private OpportunityFilter filter() { return new OpportunityFilter(null, null, null, null); }
