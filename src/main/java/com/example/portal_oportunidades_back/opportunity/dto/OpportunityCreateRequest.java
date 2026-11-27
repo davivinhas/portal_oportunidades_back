@@ -13,9 +13,15 @@ public record OpportunityCreateRequest(
         @NotBlank @Size(max = 200) String title,
         @NotBlank String description,
         String requirements,
-        @NotNull OpportunityModality modality,
+        @NotBlank @Size(max = 60) String modality,
         @Size(max = 200) String location,
+        @Size(max = 120) String area,
         @NotNull @Positive Integer vacancyCount,
-        @NotNull @Future Instant registrationStartsAt,
+        @NotNull Instant registrationStartsAt,
         @NotNull @Future Instant registrationEndsAt
-) { }
+) {
+    public OpportunityCreateRequest(String title, String description, String requirements, String modality,
+            String location, Integer vacancyCount, Instant registrationStartsAt, Instant registrationEndsAt) {
+        this(title, description, requirements, modality, location, null, vacancyCount, registrationStartsAt, registrationEndsAt);
+    }
+}

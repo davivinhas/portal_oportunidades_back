@@ -47,6 +47,9 @@ class PortalOportunidadesBackApplicationTests {
     @MockitoBean
     private com.example.portal_oportunidades_back.auth.repository.AdministratorRepository administratorRepository;
 
+    @MockitoBean
+    private com.example.portal_oportunidades_back.administration.repository.CatalogItemRepository catalogItemRepository;
+
     @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.web.context.WebApplicationContext context;
 

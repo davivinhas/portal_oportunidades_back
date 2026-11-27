@@ -55,6 +55,7 @@ public class SecurityConfiguration {
                     .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/logout", "/api/auth/register/student", "/api/auth/register/recruiter").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/opportunities", "/api/opportunities/{id}").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/catalogs/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/public/recruiters/**", "/api/public/students/**").permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/actuator/health").permitAll()
                     .anyRequest().authenticated())

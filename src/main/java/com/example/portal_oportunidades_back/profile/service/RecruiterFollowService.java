@@ -46,7 +46,8 @@ public class RecruiterFollowService {
         return follows.findAllWithRecruiterByStudentId(studentId).stream()
                 .map(follow -> follow.getRecruiter())
                 .map(recruiter -> new com.example.portal_oportunidades_back.profile.dto.RecruiterResponse(
-                        recruiter.getId(), recruiter.getType(), recruiter.getOrganizationName(),
+                        recruiter.getId(), recruiter.getUser().getName(), recruiter.getType(), recruiter.getOrganizationName(),
+                        recruiter.getDescription(), recruiter.getFocusArea(), recruiter.getWebsite(),
                         recruiter.isAuthorized(), recruiter.getCreatedAt(), recruiter.getUpdatedAt()))
                 .toList();
     }

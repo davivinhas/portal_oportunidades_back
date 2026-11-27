@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface RecruiterMapper {
+    @Mapping(target = "name", source = "user.name")
     @Mapping(target = "authorized", source = "authorized")
     RecruiterResponse toResponse(Recruiter recruiter);
 }

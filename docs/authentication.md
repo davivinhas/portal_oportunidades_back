@@ -32,10 +32,10 @@ Use the ID returned at registration and verify it belongs to the intended user. 
 
 ## Bootstrap an administrator from the terminal
 
-Run the application with the desired database profile and the `bootstrap-admin` command. It prompts for name and email, then reads the password without echoing it. Never pass the password as a command-line argument.
+Run the command as a one-off Compose container. It uses the same image, environment variables, database URL, username, and password as the configured application service. The interactive prompt reads the password without echoing it. Never pass the password as a command-line argument.
 
 ```powershell
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=bootstrap-admin --spring.profiles.active=local"
+docker compose run --build --rm -it -e SPRING_DOCKER_COMPOSE_ENABLED=false app bootstrap-admin
 ```
 
-This starts Spring without an HTTP server, checks that the email is unused, hashes the password with the application's BCrypt `PasswordEncoder`, inserts the administrator relationship in the same transaction, prints the new user ID, and exits. An interactive terminal is required.
+This starts Spring without an HTTP server or published application port. Compose waits for the database and Redis dependencies, checks that the email is unused, hashes the password with the application's BCrypt `PasswordEncoder`, inserts the administrator relationship in the same transaction, prints the new user ID, and exits. An interactive terminal is required. `--build` ensures the one-off container contains the current application code.

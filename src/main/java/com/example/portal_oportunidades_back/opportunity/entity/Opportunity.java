@@ -43,13 +43,14 @@ public class Opportunity {
     @Column(name = "requisitos", columnDefinition = "text")
     private String requirements;
 
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "modalidade", nullable = false, columnDefinition = "oportunidades.modalidade_oportunidade")
-    private OpportunityModality modality;
+    @Column(name = "modalidade", nullable = false, length = 60)
+    private String modality;
 
     @Column(name = "localizacao", length = 200)
     private String location;
+
+    @Column(name = "area", length = 120)
+    private String area;
 
     @Column(name = "quantidade_vagas", nullable = false)
     private Integer vacancyCount;
@@ -150,6 +151,7 @@ public class Opportunity {
         requirements = details.requirements();
         modality = details.modality();
         location = details.location();
+        area = details.area();
         vacancyCount = details.vacancyCount();
         registrationStartsAt = details.registrationStartsAt();
         registrationEndsAt = details.registrationEndsAt();
@@ -170,8 +172,9 @@ public class Opportunity {
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String getRequirements() { return requirements; }
-    public OpportunityModality getModality() { return modality; }
+    public String getModality() { return modality; }
     public String getLocation() { return location; }
+    public String getArea() { return area; }
     public Integer getVacancyCount() { return vacancyCount; }
     public Instant getRegistrationStartsAt() { return registrationStartsAt; }
     public Instant getRegistrationEndsAt() { return registrationEndsAt; }

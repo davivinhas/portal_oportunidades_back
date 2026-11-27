@@ -49,6 +49,9 @@ public class OpportunitySearchRepositoryImpl implements OpportunitySearchReposit
         Field<String> status = field(name("o", "status"), SQLDataType.VARCHAR);
         Field<String> modality = field(name("o", "modalidade"), SQLDataType.VARCHAR);
         Field<Long> recruiterId = field(name("o", "recrutador_id"), SQLDataType.BIGINT);
+        Field<String> location = field(name("o", "localizacao"), SQLDataType.VARCHAR);
+        Field<String> area = field(name("o", "area"), SQLDataType.VARCHAR);
+        Field<Instant> registrationEndsAt = field(name("o", "fim_inscricoes"), SQLDataType.INSTANT);
         Field<Object> searchVector = field(name("o", "search_vector"), SQLDataType.OTHER);
         Field<Object> tsquery = toTsQuery(searchQuery);
         Field<Float> rank = field(RANK_EXPRESSION, SQLDataType.REAL, searchVector, tsquery);
@@ -66,13 +69,15 @@ public class OpportunitySearchRepositoryImpl implements OpportunitySearchReposit
                 .and(condition("{0} @@ {1}", searchVector, tsquery));
 
         if (filter.modality() != null) {
-            conditions = conditions.and(condition(
-                    "{0} = CAST({1} AS oportunidades.modalidade_oportunidade)",
-                    modality, val(filter.modality().name())));
+            conditions = conditions.and(modality.eq(filter.modality()));
         }
         if (filter.recruiterId() != null) {
             conditions = conditions.and(recruiterId.eq(filter.recruiterId()));
         }
+        if (filter.location() != null) conditions = conditions.and(location.likeIgnoreCase("%" + filter.location() + "%"));
+        if (filter.area() != null) conditions = conditions.and(area.likeIgnoreCase("%" + filter.area() + "%"));
+        if (filter.deadlineFrom() != null) conditions = conditions.and(registrationEndsAt.ge(filter.deadlineFrom()));
+        if (filter.deadlineTo() != null) conditions = conditions.and(registrationEndsAt.le(filter.deadlineTo()));
         if (cursor != null) {
             Field<Float> cursorRank = val(cursor.rank().floatValue(), SQLDataType.REAL);
             Field<Instant> cursorCreatedAt = val(cursor.createdAt(), SQLDataType.INSTANT);

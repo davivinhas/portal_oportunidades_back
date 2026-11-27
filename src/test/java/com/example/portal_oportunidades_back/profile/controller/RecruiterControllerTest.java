@@ -47,10 +47,10 @@ class RecruiterControllerTest {
                         .with(user("test-recruiter"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type":"COMPANY","organizationName":""}
-                                """))
+                                {"type":"COMPANY","organizationName":"Company","website":"%s"}
+                                """.formatted("x".repeat(256))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fieldErrors.organizationName").exists());
+                .andExpect(jsonPath("$.fieldErrors.website").exists());
     }
 
     @Test

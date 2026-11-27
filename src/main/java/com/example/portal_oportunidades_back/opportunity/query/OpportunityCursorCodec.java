@@ -48,9 +48,13 @@ public class OpportunityCursorCodec {
     private String fingerprint(OpportunityFilter filter) {
         String query = filter.query() == null ? "" : filter.query();
         String canonical = query.length() + ":" + query + "\n"
-                + (filter.modality() == null ? "" : filter.modality().name()) + "\n"
+                + (filter.modality() == null ? "" : filter.modality()) + "\n"
                 + (filter.status() == null ? "" : filter.status().name()) + "\n"
-                + (filter.recruiterId() == null ? "" : filter.recruiterId().toString());
+                + (filter.recruiterId() == null ? "" : filter.recruiterId().toString()) + "\n"
+                + (filter.location() == null ? "" : filter.location()) + "\n"
+                + (filter.area() == null ? "" : filter.area()) + "\n"
+                + (filter.deadlineFrom() == null ? "" : filter.deadlineFrom()) + "\n"
+                + (filter.deadlineTo() == null ? "" : filter.deadlineTo());
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                     .digest(canonical.getBytes(StandardCharsets.UTF_8)));

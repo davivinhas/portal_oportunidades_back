@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,10 +31,15 @@ public class PublicOpportunityController {
             @RequestParam(required = false) @Size(max = 1024) String cursor,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
             @RequestParam(required = false) @Size(max = 200) String q,
-            @RequestParam(required = false) OpportunityModality modality,
+            @RequestParam(required = false) String modality,
             @RequestParam(required = false) OpportunityStatus status,
-            @RequestParam(required = false) @Positive Long recruiterId) {
-        return service.listPublic(new OpportunityFilter(q, modality, status, recruiterId), cursor, limit);
+            @RequestParam(required = false) @Positive Long recruiterId,
+            @RequestParam(required = false) @Size(max = 120) String location,
+            @RequestParam(required = false) @Size(max = 120) String area,
+            @RequestParam(required = false) Instant deadlineFrom,
+            @RequestParam(required = false) Instant deadlineTo) {
+        return service.listPublic(new OpportunityFilter(q, modality, status, recruiterId,
+                location, area, deadlineFrom, deadlineTo), cursor, limit);
     }
 
     @GetMapping("/{id}")

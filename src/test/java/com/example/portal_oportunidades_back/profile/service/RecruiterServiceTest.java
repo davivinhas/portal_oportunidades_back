@@ -41,7 +41,7 @@ class RecruiterServiceTest {
         RecruiterResponse result = service.updateProfile(10L, request);
 
         assertSame(response, result);
-        verify(recruiter).updateProfile(RecruiterType.PROFESSOR, "Researcher");
+        verify(recruiter).updateProfile(RecruiterType.PROFESSOR, "Researcher", null, null, null);
         verify(recruiterRepository, never()).save(any());
     }
 

@@ -4,6 +4,8 @@ import com.example.portal_oportunidades_back.exception.BadRequestException;
 import com.example.portal_oportunidades_back.exception.BusinessException;
 import com.example.portal_oportunidades_back.exception.ForbiddenOperationException;
 import com.example.portal_oportunidades_back.exception.ResourceNotFoundException;
+import com.example.portal_oportunidades_back.administration.repository.CatalogItemRepository;
+import com.example.portal_oportunidades_back.administration.service.CatalogAdministrationService;
 import com.example.portal_oportunidades_back.opportunity.dto.OpportunityCreateRequest;
 import com.example.portal_oportunidades_back.opportunity.dto.OpportunityCursorResponse;
 import com.example.portal_oportunidades_back.opportunity.dto.OpportunityResponse;
@@ -22,6 +24,9 @@ import com.example.portal_oportunidades_back.opportunity.repository.OpportunityS
 import com.example.portal_oportunidades_back.profile.entity.Recruiter;
 import com.example.portal_oportunidades_back.profile.repository.RecruiterRepository;
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class OpportunityService {
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Sao_Paulo");
     private static final Sort PUBLIC_ORDER = Sort.by(
             Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
 
@@ -43,17 +49,25 @@ public class OpportunityService {
     private final OpportunityCursorCodec cursorCodec;
     private final BooleanSearchQueryParser searchQueryParser;
     private final Clock clock;
+    private final CatalogItemRepository catalogs;
 
     @Autowired
     public OpportunityService(OpportunityRepository opportunities, RecruiterRepository recruiters,
             OpportunityMapper mapper, OpportunityCursorCodec cursorCodec,
-            BooleanSearchQueryParser searchQueryParser, Clock clock) {
+            BooleanSearchQueryParser searchQueryParser, Clock clock, CatalogItemRepository catalogs) {
         this.opportunities = opportunities;
         this.recruiters = recruiters;
         this.mapper = mapper;
         this.cursorCodec = cursorCodec;
         this.searchQueryParser = searchQueryParser;
         this.clock = clock;
+        this.catalogs = catalogs;
+    }
+
+    public OpportunityService(OpportunityRepository opportunities, RecruiterRepository recruiters,
+            OpportunityMapper mapper, OpportunityCursorCodec cursorCodec,
+            BooleanSearchQueryParser searchQueryParser, Clock clock) {
+        this(opportunities, recruiters, mapper, cursorCodec, searchQueryParser, clock, null);
     }
 
     public OpportunityService(OpportunityRepository opportunities, RecruiterRepository recruiters,
@@ -63,6 +77,8 @@ public class OpportunityService {
 
     @Transactional
     public OpportunityResponse create(Long recruiterId, OpportunityCreateRequest request) {
+        validateRegistrationStart(request.registrationStartsAt());
+        validateModality(request.modality());
         Recruiter recruiter = findRecruiter(recruiterId);
         if (!recruiter.isAuthorized()) {
             throw new BusinessException("Recruiter is not authorized to create opportunities");
@@ -83,6 +99,8 @@ public class OpportunityService {
 
     @Transactional
     public OpportunityResponse update(Long recruiterId, Long opportunityId, OpportunityUpdateRequest request) {
+        validateRegistrationStart(request.registrationStartsAt());
+        validateModality(request.modality());
         Opportunity opportunity = findOwned(recruiterId, opportunityId);
         ensureAuthorized(opportunity.getRecruiter());
         opportunity.updateDetails(mapper.toDetails(request));
@@ -118,7 +136,8 @@ public class OpportunityService {
             return new OpportunityCursorResponse(List.of(), null, false);
         }
         OpportunityFilter publicFilter = new OpportunityFilter(filter.query(), filter.modality(),
-                OpportunityStatus.PUBLISHED, filter.recruiterId());
+                OpportunityStatus.PUBLISHED, filter.recruiterId(), filter.location(), filter.area(),
+                filter.deadlineFrom(), filter.deadlineTo());
         OpportunityCursor cursor = cursorCodec.decode(cursorToken, publicFilter);
         if (publicFilter.query() != null) {
             return listPublicByQuery(publicFilter, cursor, limit);
@@ -205,5 +224,20 @@ public class OpportunityService {
         if (!recruiters.existsById(recruiterId)) {
             throw new ResourceNotFoundException("Recruiter not found: " + recruiterId);
         }
+    }
+
+    private void validateModality(String modality) {
+        if (catalogs != null && !catalogs.existsByCategoryAndCodeAndActiveTrue(
+                CatalogAdministrationService.OPPORTUNITY_MODALITY, modality))
+            throw new BadRequestException("Opportunity modality is not active in the catalog");
+    }
+
+    private void validateRegistrationStart(java.time.Instant startsAt) {
+        if (startsAt == null) throw new BadRequestException("Registration start is required");
+        // Date inputs from browsers are commonly serialized as midnight UTC; preserve that chosen calendar date.
+        LocalDate startDate = startsAt.atZone(ZoneOffset.UTC).toLocalDate();
+        LocalDate today = LocalDate.now(clock.withZone(BUSINESS_ZONE));
+        if (startDate.isBefore(today))
+            throw new BadRequestException("Registration start must be today or a future date");
     }
 }

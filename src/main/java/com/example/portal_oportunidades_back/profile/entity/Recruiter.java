@@ -29,13 +29,15 @@ public class Recruiter {
     @JoinColumn(name = "usuario_id")
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "tipo", nullable = false, columnDefinition = "perfil.tipo_recrutador")
-    private RecruiterType type;
+    @Column(name = "tipo", nullable = false, length = 60)
+    private String type;
 
-    @Column(name = "nome_organizacao", nullable = false, length = 200)
+    @Column(name = "nome_organizacao", length = 200)
     private String organizationName;
+
+    @Column(name = "descricao", columnDefinition = "text") private String description;
+    @Column(name = "area_atuacao", length = 120) private String focusArea;
+    @Column(name = "site", length = 255) private String website;
 
     @Column(name = "autorizado", nullable = false)
     private boolean authorized;
@@ -50,16 +52,23 @@ public class Recruiter {
 
     protected Recruiter() { }
 
-    public Recruiter(User user, RecruiterType type, String organizationName, boolean authorized) {
+    public Recruiter(User user, String type, String organizationName, boolean authorized) {
         this.user = Objects.requireNonNull(user, "user must not be null");
         this.type = Objects.requireNonNull(type, "type must not be null");
-        this.organizationName = requireText(organizationName, "organizationName");
+        this.organizationName = normalizeOrganization(type, organizationName);
         this.authorized = authorized;
     }
 
-    public void updateProfile(RecruiterType type, String organizationName) {
+    public void updateProfile(String type, String organizationName, String description, String focusArea, String website) {
         this.type = Objects.requireNonNull(type, "type must not be null");
-        this.organizationName = requireText(organizationName, "organizationName");
+        this.organizationName = normalizeOrganization(type, organizationName);
+        this.description = optionalText(description, 5000, "description");
+        this.focusArea = optionalText(focusArea, 120, "focusArea");
+        this.website = optionalText(website, 255, "website");
+    }
+
+    public void updateProfile(String type, String organizationName) {
+        updateProfile(type, organizationName, description, focusArea, website);
     }
 
     public void authorize() {
@@ -68,14 +77,28 @@ public class Recruiter {
 
     public Long getId() { return id; }
     public User getUser() { return user; }
-    public RecruiterType getType() { return type; }
+    public String getType() { return type; }
     public String getOrganizationName() { return organizationName; }
+    public String getDescription() { return description; }
+    public String getFocusArea() { return focusArea; }
+    public String getWebsite() { return website; }
     public boolean isAuthorized() { return authorized; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
     private static String requireText(String value, String field) {
         if (value == null || value.isBlank()) throw new IllegalArgumentException(field + " must not be blank");
+        return value.trim();
+    }
+
+    private static String normalizeOrganization(String type, String value) {
+        if (RecruiterType.PROFESSOR.equals(type) && (value == null || value.isBlank())) return null;
+        return requireText(value, "organizationName");
+    }
+
+    private static String optionalText(String value, int max, String field) {
+        if (value == null || value.isBlank()) return null;
+        if (value.trim().length() > max) throw new IllegalArgumentException(field + " exceeds " + max + " characters");
         return value.trim();
     }
 }
