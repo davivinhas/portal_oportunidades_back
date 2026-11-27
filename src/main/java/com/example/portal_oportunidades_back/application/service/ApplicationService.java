@@ -79,6 +79,37 @@ public class ApplicationService {
         application.cancel();
     }
 
+    public ApplicationPageResponse listCandidates(Long recruiterId, Long opportunityId,
+            ApplicationStatus status, int page, int size) {
+        if (page < 0 || size < 1 || size > 100)
+            throw new BadRequestException("Page must be non-negative and size must be between 1 and 100");
+        ensureRecruiterCanManage(recruiterId, opportunityId);
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("appliedAt"), Sort.Order.desc("id")));
+        Page<Application> result = status == null ? applications.findAllByOpportunityId(opportunityId, pageable)
+                : applications.findAllByOpportunityIdAndStatus(opportunityId, status, pageable);
+        return new ApplicationPageResponse(result.getContent().stream().map(mapper::toResponse).toList(),
+                result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages(), result.hasNext());
+    }
+
+    @Transactional
+    public ApplicationResponse updateStatus(Long recruiterId, Long opportunityId, Long applicationId,
+            ApplicationStatus status) {
+        ensureRecruiterCanManage(recruiterId, opportunityId);
+        Application application = applications.findByIdAndOpportunityId(applicationId, opportunityId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+        application.updateStatus(status);
+        return mapper.toResponse(application);
+    }
+
+    private void ensureRecruiterCanManage(Long recruiterId, Long opportunityId) {
+        Opportunity opportunity = opportunities.findByIdAndDeletedAtIsNull(opportunityId)
+                .orElseThrow(() -> new ResourceNotFoundException("Opportunity not found: " + opportunityId));
+        if (!opportunity.belongsTo(recruiterId))
+            throw new ForbiddenOperationException("Opportunity does not belong to recruiter: " + recruiterId);
+        if (!opportunity.getRecruiter().isAuthorized())
+            throw new ForbiddenOperationException("Recruiter is not authorized to manage candidates");
+    }
+
     private Application findOwned(Long studentId, Long applicationId) {
         return applications.findByIdAndStudentId(applicationId, studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));

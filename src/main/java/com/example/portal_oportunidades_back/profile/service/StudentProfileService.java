@@ -41,6 +41,11 @@ public class StudentProfileService {
         return mapper.toResponse(student, experiences.findAllByStudentIdOrderByStartDateDescIdAsc(studentId));
     }
 
+    @Transactional(readOnly = true)
+    public StudentProfileResponse getCandidateProfile(Long studentId) {
+        return getProfile(studentId);
+    }
+
     @Transactional
     public StudentProfileResponse updateProfile(Long studentId, StudentProfileRequest request) {
         if (students.existsByRegistrationNumberAndIdNot(request.registrationNumber().trim(), studentId))

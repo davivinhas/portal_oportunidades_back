@@ -10,4 +10,5 @@ public class Administrator {
     @MapsId @OneToOne(optional = false) @JoinColumn(name = "usuario_id")
     private User user;
     protected Administrator() { }
+    public Administrator(User user) { this.user = java.util.Objects.requireNonNull(user); }
 }

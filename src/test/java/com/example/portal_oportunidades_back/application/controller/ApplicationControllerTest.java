@@ -18,7 +18,7 @@ class ApplicationControllerTest {
     private final ApplicationService service = mock(ApplicationService.class);
     private final MockMvc mvc = standaloneSetup(new ApplicationController(service))
             .setControllerAdvice(new GlobalExceptionHandler()).build();
-    private final ApplicationResponse response = new ApplicationResponse(10L, 2L, null,
+    private final ApplicationResponse response = new ApplicationResponse(10L, 2L, null, null,
             ApplicationStatus.SUBMITTED, Instant.parse("2026-10-09T12:00:00Z"), null, null);
 
     @Test

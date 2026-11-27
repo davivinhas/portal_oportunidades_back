@@ -24,6 +24,11 @@ public class RecruiterService {
         return recruiterMapper.toResponse(findRecruiter(recruiterId));
     }
 
+    @Transactional(readOnly = true)
+    public RecruiterResponse getPublicProfile(Long recruiterId) {
+        return recruiterMapper.toResponse(findRecruiter(recruiterId));
+    }
+
     @Transactional
     public RecruiterResponse updateProfile(Long recruiterId, RecruiterUpdateRequest request) {
         Recruiter recruiter = findRecruiter(recruiterId);

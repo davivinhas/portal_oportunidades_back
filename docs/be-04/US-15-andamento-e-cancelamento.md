@@ -31,12 +31,15 @@ comparar um formulário antigo após outra transação já ter terminado.
 
 ## Limites da entrega
 
-A atualização de status existe como regra da entidade e é testada. Não foi criado
-endpoint de gestão de candidatos pelo recrutador, pois essa API não está definida
-nas subtarefas da BE-04. O futuro service deve verificar recrutador autorizado e
-propriedade da oportunidade antes de invocar updateStatus.
+A gestão de candidatos está disponível para o recrutador autorizado proprietário:
 
-Não foram criadas notificações, entrevistas, pontuação ou histórico.
+- `GET /api/recruiters/{recruiterId}/opportunities/{opportunityId}/applications` lista candidaturas, com filtro opcional `status` e paginação `page` e `size`.
+- `PATCH /api/recruiters/{recruiterId}/opportunities/{opportunityId}/applications/{applicationId}/status` atualiza o status com corpo `{"status":"UNDER_REVIEW"}`.
+
+A identidade autenticada deve corresponder ao recrutador da rota. O serviço verifica
+a autorização do recrutador, a propriedade da oportunidade e o vínculo da candidatura.
+
+Não foram criadas notificações, entrevistas ou pontuação. O histórico de status e as etapas seletivas configuráveis por candidatura estão disponíveis nas rotas do recrutador.
 
 ## Testes
 
@@ -44,7 +47,3 @@ Testes parametrizados cobrem estados iniciais, finais, regressões e cancelament
 Service/controller verificam detalhe, propriedade por ID e cancelamento.
 Integração confirma persistência de CANCELLED e que uma aprovação concorrente
 vence um cancelamento carregado com versão antiga, causando rollback deste último.
-
-## Pendência
-
-Autenticação e autorização pelo usuário real permanecem pendentes da BE-01.

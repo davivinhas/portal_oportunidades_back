@@ -7,7 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class PortalOportunidadesBackApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PortalOportunidadesBackApplication.class, args);
+        var application = new SpringApplication(PortalOportunidadesBackApplication.class);
+        if (args.length > 0 && "bootstrap-admin".equals(args[0])) {
+            application.setWebApplicationType(org.springframework.boot.WebApplicationType.NONE);
+        }
+        application.run(args);
     }
 
 }

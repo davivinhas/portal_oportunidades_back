@@ -40,6 +40,17 @@ public class RecruiterFollowService {
         return new FollowingResponse(follows.existsByStudentIdAndRecruiterId(studentId, recruiterId));
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<com.example.portal_oportunidades_back.profile.dto.RecruiterResponse> listFollowing(Long studentId) {
+        if (!students.existsById(studentId)) throw new ResourceNotFoundException("Student not found: " + studentId);
+        return follows.findAllWithRecruiterByStudentId(studentId).stream()
+                .map(follow -> follow.getRecruiter())
+                .map(recruiter -> new com.example.portal_oportunidades_back.profile.dto.RecruiterResponse(
+                        recruiter.getId(), recruiter.getType(), recruiter.getOrganizationName(),
+                        recruiter.isAuthorized(), recruiter.getCreatedAt(), recruiter.getUpdatedAt()))
+                .toList();
+    }
+
     private void validateProfiles(Long studentId, Long recruiterId) {
         if (!students.existsById(studentId)) {
             throw new ResourceNotFoundException("Student not found: " + studentId);

@@ -21,4 +21,17 @@ public class RecruiterAuthorizationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Recruiter not found: " + recruiterId));
         recruiter.authorize();
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<com.example.portal_oportunidades_back.profile.dto.RecruiterResponse>
+            listPending(int page, int size) {
+        if (page < 0 || size < 1 || size > 100)
+            throw new com.example.portal_oportunidades_back.exception.BadRequestException("Page must be non-negative and size must be between 1 and 100");
+        return recruiters.findAllByAuthorizedFalse(org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("createdAt").ascending()))
+                .map(recruiter -> new com.example.portal_oportunidades_back.profile.dto.RecruiterResponse(
+                        recruiter.getId(), recruiter.getType(), recruiter.getOrganizationName(),
+                        recruiter.isAuthorized(), recruiter.getCreatedAt(), recruiter.getUpdatedAt()));
+    }
 }

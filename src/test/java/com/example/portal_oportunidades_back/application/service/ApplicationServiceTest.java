@@ -116,4 +116,32 @@ class ApplicationServiceTest {
         assertThat(owned.getStatus()).isEqualTo(ApplicationStatus.CANCELLED);
         verify(applications, never()).save(any());
     }
+
+    @Test
+    void recruiterListsAndUpdatesOnlyApplicationsOfOwnedOpportunity() {
+        when(opportunities.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(opportunity));
+        Application application = new Application(student, opportunity, NOW);
+        when(applications.findAllByOpportunityIdAndStatus(eq(1L), eq(ApplicationStatus.SUBMITTED), any()))
+                .thenAnswer(call -> new PageImpl<>(List.of(application), call.getArgument(2), 1));
+        assertThat(service.listCandidates(7L, 1L, ApplicationStatus.SUBMITTED, 0, 20).items()).hasSize(1);
+        when(applications.findByIdAndOpportunityId(10L, 1L)).thenReturn(Optional.of(application));
+        service.updateStatus(7L, 1L, 10L, ApplicationStatus.APPROVED);
+        assertThat(application.getStatus()).isEqualTo(ApplicationStatus.APPROVED);
+        assertThatThrownBy(() -> service.updateStatus(7L, 1L, 10L, ApplicationStatus.REJECTED))
+                .isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.updateStatus(7L, 1L, 99L, ApplicationStatus.APPROVED))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(applications, never()).save(any());
+    }
+
+    @Test
+    void rejectsCandidateManagementForOtherOrUnauthorizedRecruiters() {
+        when(opportunities.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(opportunity));
+        assertThatThrownBy(() -> service.listCandidates(8L, 1L, null, 0, 20))
+                .isInstanceOf(ForbiddenOperationException.class);
+        when(opportunity.getRecruiter().isAuthorized()).thenReturn(false);
+        assertThatThrownBy(() -> service.updateStatus(7L, 1L, 10L, ApplicationStatus.UNDER_REVIEW))
+                .isInstanceOf(ForbiddenOperationException.class);
+        verifyNoInteractions(applications);
+    }
 }

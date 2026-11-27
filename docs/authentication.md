@@ -7,7 +7,8 @@ Set `JWT_SECRET` to a high-entropy secret of at least 32 UTF-8 bytes. Docker Com
 1. GET `/api/auth/csrf` with credentials enabled. Save the returned `token` and use the returned `headerName` for the following unsafe requests. Keep the CSRF cookie sent by the server.
 2. POST `/api/auth/register/student` or `/api/auth/register/recruiter` with that CSRF header. Registration returns the new account ID and role; it does not log the user in. Recruiters start unauthorized.
 3. POST `/api/auth/login` with `{"email":"user@example.com","password":"..."}` and the CSRF header. A successful response is 204 and sets an HTTP-only `access_token` cookie. The JWT expires after one hour.
-4. Send requests with browser credentials enabled. Include the CSRF header on POST, PUT, PATCH and DELETE requests. POST `/api/auth/logout` with the CSRF header clears the authentication cookie. Logout does not revoke a copied token before it expires.
+4. GET `/api/auth/me` with credentials enabled to check the session. A valid session returns 200, for example `{"id":42,"email":"user@example.com","roles":["ADMIN","STUDENT"]}`. Roles are `STUDENT`, `RECRUITER`, and `ADMIN`, without a prefix. Missing, expired or invalid cookies and inactive accounts return 401.
+5. Send requests with browser credentials enabled. Include the CSRF header on POST, PUT, PATCH and DELETE requests. POST `/api/auth/logout` with the CSRF header clears the authentication cookie. Logout does not revoke a copied token before it expires.
 
 Student registration fields: `name`, `email`, `password`, `registrationNumber`, `course`. Recruiter fields: `name`, `email`, `password`, `type` (COMPANY, PROFESSOR, ACADEMIC_LEAGUE, UNIVERSITY_DEPARTMENT or OTHER), `organizationName`. Passwords must be at least 8 characters and no more than 72 UTF-8 bytes. Administrator accounts cannot be registered publicly.
 
@@ -21,10 +22,20 @@ Open `/swagger-ui/index.html` from the backend origin. Execute `GET /api/auth/cs
 
 ## Administrator and recruiter authorization
 
-Administrator self-registration is deliberately unavailable. To bootstrap the first administrator, register a user through a registration endpoint, then use a trusted database administrator connection to insert its existing user ID into `app_auth.administrador`:
+Administrator self-registration is deliberately unavailable. To bootstrap the first administrator, use the terminal command below. Direct database insertion is an alternative for trusted operators:
 
 ```sql
 INSERT INTO app_auth.administrador (usuario_id) VALUES (<existing-user-id>);
 ```
 
-Use the ID returned at registration and verify it belongs to the intended user. This grants the existing account an additional ADMIN role. Do not expose database credentials to application users. Log in as that account, obtain a CSRF token, and call `PUT /api/admin/recruiters/{recruiterId}/authorization`. Only administrators may call it; the operation is idempotent and returns 204, or 404 if the recruiter does not exist. Public registration cannot grant the admin role. There is currently no API for creating administrators, listing pending recruiters, or revoking recruiter authorization.
+Use the ID returned at registration and verify it belongs to the intended user. This grants the existing account an additional ADMIN role. Do not expose database credentials to application users. Log in as that account, obtain a CSRF token, and call `PUT /api/admin/recruiters/{recruiterId}/authorization`. Only administrators may call it; the operation is idempotent and returns 204, or 404 if the recruiter does not exist. Public registration cannot grant the admin role.
+
+## Bootstrap an administrator from the terminal
+
+Run the application with the desired database profile and the `bootstrap-admin` command. It prompts for name and email, then reads the password without echoing it. Never pass the password as a command-line argument.
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=bootstrap-admin --spring.profiles.active=local"
+```
+
+This starts Spring without an HTTP server, checks that the email is unused, hashes the password with the application's BCrypt `PasswordEncoder`, inserts the administrator relationship in the same transaction, prints the new user ID, and exits. An interactive terminal is required.
