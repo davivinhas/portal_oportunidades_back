@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261112-auth-email-case-insensitive-unique
+      author: linkedufma
+      changes:
+        - sql:
+            sql: CREATE UNIQUE INDEX uk_usuario_email_lower ON app_auth.usuario (lower(email));
+      rollback:
+        - sql:
+            sql: DROP INDEX app_auth.uk_usuario_email_lower;

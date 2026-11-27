@@ -25,6 +25,11 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(HttpServletRequest request) {
+        return response(HttpStatus.UNAUTHORIZED, "Invalid credentials", request, Map.of());
+    }
+
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiErrorResponse> handleConflict(ConflictException exception, HttpServletRequest request) {
         return response(HttpStatus.CONFLICT, exception.getMessage(), request, Map.of());
@@ -34,6 +39,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleIntegrityConflict(
             DataIntegrityViolationException exception, HttpServletRequest request) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException violation
+                    && ("uk_usuario_email".equalsIgnoreCase(violation.getConstraintName())
+                    || "uk_usuario_email_lower".equalsIgnoreCase(violation.getConstraintName()))) {
+                return response(HttpStatus.CONFLICT, "Email is already in use", request, Map.of());
+            }
             if (cause instanceof org.hibernate.exception.ConstraintViolationException violation
                     && "uk_aluno_matricula".equalsIgnoreCase(violation.getConstraintName())) {
                 return response(HttpStatus.CONFLICT, "Registration number is already in use", request, Map.of());

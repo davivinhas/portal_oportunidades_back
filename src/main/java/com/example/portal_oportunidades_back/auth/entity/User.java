@@ -25,7 +25,15 @@ public class User {
     private Instant updatedAt;
     protected User() { }
 
+    public User(String name, String email, String passwordHash) {
+        this.name = name.trim();
+        this.email = email.trim().toLowerCase(java.util.Locale.ROOT);
+        this.passwordHash = passwordHash;
+    }
+
     public Long getId() { return id; }
     public String getName() { return name; }
     public String getEmail() { return email; }
+    public String getPasswordHash() { return passwordHash; }
+    public boolean isActive() { return active; }
 }

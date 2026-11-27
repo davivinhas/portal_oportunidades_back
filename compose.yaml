@@ -31,6 +31,7 @@ services:
       - '8080:8080'
     environment:
       SPRING_PROFILES_ACTIVE: local
+      JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: jdbc:postgresql://postgres:5432/portal_oportunidades
       DATABASE_USERNAME: portal
       DATABASE_PASSWORD: portal

@@ -4,19 +4,22 @@ import com.example.portal_oportunidades_back.application.dto.*;
 import com.example.portal_oportunidades_back.application.service.ApplicationService;
 import com.example.portal_oportunidades_back.opportunity.entity.ApplicationStatus;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 @RestController
-@Tag(name = "Applications", description = "Student IDs are explicit until identity and role verification are integrated")
+@Tag(name = "Applications", description = "Access is limited to the authenticated student")
 public class ApplicationController {
     private final ApplicationService service;
 
     public ApplicationController(ApplicationService service) { this.service = service; }
 
+    @PreAuthorize("hasRole('STUDENT') and authentication.name == #request.studentId().toString()")
     @PostMapping("/api/opportunities/{opportunityId}/applications")
     @Operation(summary = "Apply to an open opportunity",
             description = "Requires an existing student profile. Repeated applications, including after cancellation, return 409.")
@@ -27,6 +30,7 @@ public class ApplicationController {
                 + "/applications/" + response.id())).body(response);
     }
 
+    @PreAuthorize("hasRole('STUDENT') and authentication.name == #studentId.toString()")
     @GetMapping("/api/students/{studentId}/applications")
     @Operation(summary = "List a student's applications", description = "Zero-based pagination; size 1–100. Optional status filter.")
     public ResponseEntity<ApplicationPageResponse> list(@PathVariable Long studentId,
@@ -35,12 +39,14 @@ public class ApplicationController {
         return ResponseEntity.ok(service.listOwned(studentId, status, page, size));
     }
 
+    @PreAuthorize("hasRole('STUDENT') and authentication.name == #studentId.toString()")
     @GetMapping("/api/students/{studentId}/applications/{applicationId}")
     @Operation(summary = "Get an application owned by a student")
     public ResponseEntity<ApplicationResponse> get(@PathVariable Long studentId, @PathVariable Long applicationId) {
         return ResponseEntity.ok(service.getOwned(studentId, applicationId));
     }
 
+    @PreAuthorize("hasRole('STUDENT') and authentication.name == #studentId.toString()")
     @PostMapping("/api/students/{studentId}/applications/{applicationId}/cancel")
     @Operation(summary = "Cancel an application",
             description = "Allowed while SUBMITTED or UNDER_REVIEW; repeat cancellation returns 204. Preserves the record.")

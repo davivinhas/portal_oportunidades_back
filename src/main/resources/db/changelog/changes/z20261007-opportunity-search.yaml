@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261007-opportunity-search
+      author: linkedufma
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE oportunidades.oportunidade
+                ADD COLUMN search_vector tsvector
+                GENERATED ALWAYS AS (
+                    setweight(to_tsvector('portuguese'::regconfig, coalesce(titulo, '')), 'A') ||
+                    setweight(to_tsvector('portuguese'::regconfig, coalesce(descricao, '')), 'B') ||
+                    setweight(to_tsvector('portuguese'::regconfig, coalesce(requisitos, '')), 'C')
+                ) STORED;
+
+              CREATE INDEX idx_oportunidade_search_vector
+                ON oportunidades.oportunidade USING GIN (search_vector);

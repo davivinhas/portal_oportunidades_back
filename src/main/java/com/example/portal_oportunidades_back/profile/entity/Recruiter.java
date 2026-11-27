@@ -62,6 +62,10 @@ public class Recruiter {
         this.organizationName = requireText(organizationName, "organizationName");
     }
 
+    public void authorize() {
+        this.authorized = true;
+    }
+
     public Long getId() { return id; }
     public User getUser() { return user; }
     public RecruiterType getType() { return type; }
