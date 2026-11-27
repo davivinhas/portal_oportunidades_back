@@ -19,6 +19,10 @@ public final class OpportunitySpecifications {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(builder.isNull(root.get("deletedAt")));
             if (filter.modality() != null) predicates.add(builder.equal(root.get("modality"), filter.modality()));
+            if (filter.location() != null) predicates.add(builder.like(builder.lower(root.get("location")), "%" + filter.location() + "%"));
+            if (filter.area() != null) predicates.add(builder.like(builder.lower(root.get("area")), "%" + filter.area() + "%"));
+            if (filter.deadlineFrom() != null) predicates.add(builder.greaterThanOrEqualTo(root.get("registrationEndsAt"), filter.deadlineFrom()));
+            if (filter.deadlineTo() != null) predicates.add(builder.lessThanOrEqualTo(root.get("registrationEndsAt"), filter.deadlineTo()));
             if (filter.status() != null) predicates.add(builder.equal(root.get("status"), filter.status()));
             if (filter.recruiterId() != null) {
                 predicates.add(builder.equal(root.get("recruiter").get("id"), filter.recruiterId()));

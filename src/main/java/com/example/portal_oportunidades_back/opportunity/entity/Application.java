@@ -27,6 +27,9 @@ public class Application {
     @Column(name = "pontuacao_compatibilidade", precision = 5, scale = 2) private java.math.BigDecimal compatibilityScore;
 
     @UpdateTimestamp @Column(name = "atualizado_em", nullable = false) private Instant updatedAt;
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("changedAt ASC, id ASC")
+    private java.util.List<ApplicationStatusHistory> statusHistory = new java.util.ArrayList<>();
     protected Application() { }
 
     public Application(Student student, Opportunity opportunity, Instant appliedAt) {
@@ -36,6 +39,7 @@ public class Application {
         if (!opportunity.canReceiveApplications(appliedAt))
             throw new BusinessException("Opportunity is not receiving applications");
         this.status = ApplicationStatus.SUBMITTED;
+        statusHistory.add(new ApplicationStatusHistory(this, null, this.status));
     }
 
     public void updateStatus(ApplicationStatus next) {
@@ -45,13 +49,17 @@ public class Application {
             throw new BusinessException("Use cancellation to cancel an application");
         if (isTerminal() || next == ApplicationStatus.SUBMITTED)
             throw new BusinessException("Invalid application status transition");
+        ApplicationStatus previous = status;
         status = next;
+        statusHistory.add(new ApplicationStatusHistory(this, previous, next));
     }
 
     public void cancel() {
         if (status == ApplicationStatus.CANCELLED) return;
         if (isTerminal()) throw new BusinessException("Finalized applications cannot be cancelled");
+        ApplicationStatus previous = status;
         status = ApplicationStatus.CANCELLED;
+        statusHistory.add(new ApplicationStatusHistory(this, previous, status));
     }
 
     private boolean isTerminal() {
@@ -67,4 +75,5 @@ public class Application {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public Long getVersion() { return version; }
+    public java.util.List<ApplicationStatusHistory> getStatusHistory() { return java.util.List.copyOf(statusHistory); }
 }

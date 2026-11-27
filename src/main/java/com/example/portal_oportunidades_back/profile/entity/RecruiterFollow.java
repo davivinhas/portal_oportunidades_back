@@ -20,4 +20,5 @@ public class RecruiterFollow {
     private Instant createdAt;
 
     protected RecruiterFollow() { }
+    public Recruiter getRecruiter() { return recruiter; }
 }

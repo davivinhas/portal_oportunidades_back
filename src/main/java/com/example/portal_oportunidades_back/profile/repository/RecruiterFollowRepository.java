@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 public interface RecruiterFollowRepository extends JpaRepository<RecruiterFollow, UUID> {
     boolean existsByStudentIdAndRecruiterId(Long studentId, Long recruiterId);
 
+    @Query("select f from RecruiterFollow f join fetch f.recruiter r join fetch r.user where f.student.id = :studentId order by f.createdAt desc, r.id")
+    java.util.List<RecruiterFollow> findAllWithRecruiterByStudentId(@Param("studentId") Long studentId);
+
     @Modifying
     @Query(value = """
             INSERT INTO perfil.recruiter_follow (id, student_id, recruiter_id, created_at)

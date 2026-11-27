@@ -3,6 +3,8 @@ import com.example.portal_oportunidades_back.auth.dto.*;
 import com.example.portal_oportunidades_back.auth.entity.User;
 import com.example.portal_oportunidades_back.auth.repository.UserRepository;
 import com.example.portal_oportunidades_back.exception.*;
+import com.example.portal_oportunidades_back.administration.repository.CatalogItemRepository;
+import com.example.portal_oportunidades_back.administration.service.CatalogAdministrationService;
 import com.example.portal_oportunidades_back.profile.entity.*;
 import com.example.portal_oportunidades_back.profile.repository.*;
 import java.nio.charset.StandardCharsets;
@@ -16,8 +18,14 @@ public class RegistrationService {
     private final StudentRepository students;
     private final RecruiterRepository recruiters;
     private final PasswordEncoder passwords;
+    private final CatalogItemRepository catalogs;
+    @org.springframework.beans.factory.annotation.Autowired
+    public RegistrationService(UserRepository users, StudentRepository students, RecruiterRepository recruiters,
+            PasswordEncoder passwords, CatalogItemRepository catalogs) {
+        this.users = users; this.students = students; this.recruiters = recruiters; this.passwords = passwords; this.catalogs = catalogs;
+    }
     public RegistrationService(UserRepository users, StudentRepository students, RecruiterRepository recruiters, PasswordEncoder passwords) {
-        this.users = users; this.students = students; this.recruiters = recruiters; this.passwords = passwords;
+        this(users, students, recruiters, passwords, null);
     }
     @Transactional
     public RegistrationResponse registerStudent(StudentRegistrationRequest request) {
@@ -27,6 +35,8 @@ public class RegistrationService {
     }
     @Transactional
     public RegistrationResponse registerRecruiter(RecruiterRegistrationRequest request) {
+        if (catalogs != null && !catalogs.existsByCategoryAndCodeAndActiveTrue(CatalogAdministrationService.RECRUITER_TYPE, request.type()))
+            throw new BadRequestException("Recruiter type is not active in the catalog");
         User user = createUser(request.name(), request.email(), request.password());
         recruiters.save(new Recruiter(user, request.type(), request.organizationName(), false));
         return new RegistrationResponse(user.getId(), "RECRUITER");

@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20261128-opportunity-area-recruiter-profile
+      author: backend-team
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE oportunidades.oportunidade ADD COLUMN area VARCHAR(120);
+              DROP INDEX oportunidades.idx_oportunidade_search_vector;
+              ALTER TABLE oportunidades.oportunidade DROP COLUMN search_vector;
+              ALTER TABLE oportunidades.oportunidade ADD COLUMN search_vector tsvector
+                GENERATED ALWAYS AS (
+                  setweight(to_tsvector('portuguese'::regconfig, coalesce(titulo, '')), 'A') ||
+                  setweight(to_tsvector('portuguese'::regconfig, coalesce(descricao, '')), 'B') ||
+                  setweight(to_tsvector('portuguese'::regconfig, coalesce(requisitos, '')), 'C') ||
+                  setweight(to_tsvector('portuguese'::regconfig, coalesce(area, '')), 'D')
+                ) STORED;
+              CREATE INDEX idx_oportunidade_search_vector ON oportunidades.oportunidade USING GIN (search_vector);
+              ALTER TABLE perfil.recrutador ALTER COLUMN nome_organizacao DROP NOT NULL;
+              ALTER TABLE perfil.recrutador ADD COLUMN descricao TEXT, ADD COLUMN area_atuacao VARCHAR(120), ADD COLUMN site VARCHAR(255);
+              ALTER TABLE perfil.recrutador ADD CONSTRAINT ck_recruiter_organization_required CHECK (tipo = 'PROFESSOR' OR nome_organizacao IS NOT NULL);
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE perfil.recrutador DROP CONSTRAINT ck_recruiter_organization_required;
+              ALTER TABLE perfil.recrutador DROP COLUMN descricao, DROP COLUMN area_atuacao, DROP COLUMN site;
+              ALTER TABLE perfil.recrutador ALTER COLUMN nome_organizacao SET NOT NULL;
+              DROP INDEX IF EXISTS oportunidades.idx_oportunidade_search_vector;
+              ALTER TABLE oportunidades.oportunidade DROP COLUMN search_vector;
+              ALTER TABLE oportunidades.oportunidade DROP COLUMN area;

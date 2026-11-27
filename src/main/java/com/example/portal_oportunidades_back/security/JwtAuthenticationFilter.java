@@ -47,7 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (students.existsById(id)) roles.add(new SimpleGrantedAuthority("ROLE_STUDENT"));
                 if (recruiters.existsById(id)) roles.add(new SimpleGrantedAuthority("ROLE_RECRUITER"));
                 if (administrators.existsById(id)) roles.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(id.toString(), null, roles));
+                SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                        new AuthenticatedUser(id, user.getEmail()), null, roles));
             } catch (JwtException | IllegalArgumentException ex) { response.sendError(401); return; }
         }
         chain.doFilter(request, response);

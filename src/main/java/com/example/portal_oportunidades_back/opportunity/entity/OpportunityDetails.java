@@ -6,23 +6,30 @@ public record OpportunityDetails(
         String title,
         String description,
         String requirements,
-        OpportunityModality modality,
+        String modality,
         String location,
+        String area,
         Integer vacancyCount,
         Instant registrationStartsAt,
         Instant registrationEndsAt
 ) {
+    public OpportunityDetails(String title, String description, String requirements, String modality,
+            String location, Integer vacancyCount, Instant registrationStartsAt, Instant registrationEndsAt) {
+        this(title, description, requirements, modality, location, null, vacancyCount, registrationStartsAt, registrationEndsAt);
+    }
     public OpportunityDetails {
         title = requiredText(title, "Title");
         description = requiredText(description, "Description");
         requirements = optionalText(requirements);
         location = optionalText(location);
+        area = optionalText(area);
         if (title.length() > 200) {
             throw new BadRequestException("Title must have at most 200 characters");
         }
         if (location != null && location.length() > 200) {
             throw new BadRequestException("Location must have at most 200 characters");
         }
+        if (area != null && area.length() > 120) throw new BadRequestException("Area must have at most 120 characters");
         if (modality == null) {
             throw new BadRequestException("Modality is required");
         }

@@ -36,4 +36,6 @@ public class User {
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }
     public boolean isActive() { return active; }
+    public void suspend() { active = false; }
+    public void reactivate() { active = true; }
 }

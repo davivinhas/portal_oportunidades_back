@@ -7,8 +7,9 @@ import java.time.Instant;
 public record OpportunitySummaryResponse(
         Long id,
         String title,
-        OpportunityModality modality,
+        String modality,
         String location,
+        String area,
         Integer vacancyCount,
         Instant registrationStartsAt,
         Instant registrationEndsAt,
