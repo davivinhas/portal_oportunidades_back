@@ -41,7 +41,10 @@ public class SecurityConfiguration {
         registration.setEnabled(false);
         return registration;
     }
-    @Bean SecurityFilterChain applicationSecurity(HttpSecurity http, JwtAuthenticationFilter jwt,
+    @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication(
+            type = org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET)
+    SecurityFilterChain applicationSecurity(HttpSecurity http, JwtAuthenticationFilter jwt,
             @Value("${app.auth.cookie.secure:true}") boolean secure,
             @Value("${app.auth.cookie.same-site:Lax}") String sameSite) throws Exception {
         var csrfRepository = new org.springframework.security.web.csrf.CookieCsrfTokenRepository();
