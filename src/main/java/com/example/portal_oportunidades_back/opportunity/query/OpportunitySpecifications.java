@@ -18,10 +18,6 @@ public final class OpportunitySpecifications {
             }
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(builder.isNull(root.get("deletedAt")));
-            if (filter.title() != null) {
-                predicates.add(builder.like(builder.lower(root.get("title")),
-                        "%" + escapeLike(filter.title()) + "%", '\\'));
-            }
             if (filter.modality() != null) predicates.add(builder.equal(root.get("modality"), filter.modality()));
             if (filter.status() != null) predicates.add(builder.equal(root.get("status"), filter.status()));
             if (filter.recruiterId() != null) {
@@ -35,9 +31,5 @@ public final class OpportunitySpecifications {
             }
             return builder.and(predicates.toArray(Predicate[]::new));
         };
-    }
-
-    private static String escapeLike(String value) {
-        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 }

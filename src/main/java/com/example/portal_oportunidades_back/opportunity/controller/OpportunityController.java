@@ -5,6 +5,7 @@ import com.example.portal_oportunidades_back.opportunity.dto.OpportunityResponse
 import com.example.portal_oportunidades_back.opportunity.dto.OpportunityUpdateRequest;
 import com.example.portal_oportunidades_back.opportunity.service.OpportunityService;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.util.List;
 
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/recruiters/{recruiterId}/opportunities")
 @Tag(name = "Recruiter opportunities")
@@ -32,6 +34,7 @@ public class OpportunityController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('RECRUITER') and authentication.name == #recruiterId.toString()")
     @Operation(summary = "Create an opportunity as a draft")
     public ResponseEntity<OpportunityResponse> create(@PathVariable Long recruiterId,
             @Valid @RequestBody OpportunityCreateRequest request) {
@@ -41,12 +44,14 @@ public class OpportunityController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('RECRUITER') and authentication.name == #recruiterId.toString()")
     @Operation(summary = "List opportunities owned by a recruiter")
     public ResponseEntity<List<OpportunityResponse>> listOwned(@PathVariable Long recruiterId) {
         return ResponseEntity.ok(opportunityService.listOwned(recruiterId));
     }
 
     @GetMapping("/{opportunityId}")
+    @PreAuthorize("hasRole('RECRUITER') and authentication.name == #recruiterId.toString()")
     @Operation(summary = "Get an opportunity owned by a recruiter")
     public ResponseEntity<OpportunityResponse> getOwned(@PathVariable Long recruiterId,
             @PathVariable Long opportunityId) {
@@ -54,6 +59,7 @@ public class OpportunityController {
     }
 
     @PutMapping("/{opportunityId}")
+    @PreAuthorize("hasRole('RECRUITER') and authentication.name == #recruiterId.toString()")
     @Operation(summary = "Update a draft opportunity owned by a recruiter")
     public ResponseEntity<OpportunityResponse> update(@PathVariable Long recruiterId,
             @PathVariable Long opportunityId, @Valid @RequestBody OpportunityUpdateRequest request) {
@@ -61,6 +67,7 @@ public class OpportunityController {
     }
 
     @PostMapping("/{opportunityId}/publish")
+    @PreAuthorize("hasRole('RECRUITER') and authentication.name == #recruiterId.toString()")
     @Operation(summary = "Publish a draft opportunity")
     public ResponseEntity<OpportunityResponse> publish(@PathVariable Long recruiterId,
             @PathVariable Long opportunityId) {
@@ -68,6 +75,7 @@ public class OpportunityController {
     }
 
     @PostMapping("/{opportunityId}/close")
+    @PreAuthorize("hasRole('RECRUITER') and authentication.name == #recruiterId.toString()")
     @Operation(summary = "Close a published opportunity")
     public ResponseEntity<OpportunityResponse> close(@PathVariable Long recruiterId,
             @PathVariable Long opportunityId) {
@@ -76,6 +84,7 @@ public class OpportunityController {
 
     @DeleteMapping("/{opportunityId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('RECRUITER') and authentication.name == #recruiterId.toString()")
     @Operation(summary = "Soft delete an opportunity owned by a recruiter")
     public void delete(@PathVariable Long recruiterId, @PathVariable Long opportunityId) {
         opportunityService.delete(recruiterId, opportunityId);
